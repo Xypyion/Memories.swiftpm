@@ -29,7 +29,9 @@ struct AvatarView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                MemoryTexture(seed: seed)
+                // Avatars are never larger than ~180pt and are usually 32pt, so
+                // they never need the grain pass.
+                MemoryTexture(seed: seed, detail: .thumbnail)
                 Text(initials)
                     .font(.system(size: size * 0.36, weight: .bold))
                     .foregroundStyle(.white)

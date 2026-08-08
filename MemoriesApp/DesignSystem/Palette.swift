@@ -108,6 +108,13 @@ enum Palette {
 
     static let pink = Color(hex: 0xFF2E7E)
     static let onPink = Color(hex: 0xFFFFFF)
+
+    /// Text sitting on a dark scrim over a photograph — a board cover, a hero
+    /// tile. Static, because the scrim is dark in both themes: light mode
+    /// changes the page behind the card, not the gradient painted over the
+    /// picture inside it.
+    static let onScrim = Color(hex: 0xFFFFFF)
+    static let onScrimVariant = Color(hex: 0xFFFFFF, opacity: 0.76)
     /// Pink as foreground on a surface.
     static let pinkAccent = Color.adaptive(light: 0xC1004E, dark: 0xFF2E7E)
 

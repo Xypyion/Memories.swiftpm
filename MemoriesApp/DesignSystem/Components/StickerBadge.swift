@@ -53,10 +53,10 @@ struct StickerBadge: View {
         switch shape {
         case .rect:
             RoundedRectangle(cornerRadius: Radius.eight, style: .continuous)
-                .strokeBorder(Palette.void, lineWidth: 2)
+                .strokeBorder(Palette.ink, lineWidth: 2)
         case .pill:
             Capsule(style: .continuous)
-                .strokeBorder(Palette.void, lineWidth: 2)
+                .strokeBorder(Palette.ink, lineWidth: 2)
         }
     }
 }
@@ -68,7 +68,7 @@ extension StickerStyle {
         case .neon: Palette.neon
         case .pink: Palette.pink
         case .paper: Palette.paper
-        case .ink: Palette.void
+        case .ink: Palette.ink
         }
     }
 

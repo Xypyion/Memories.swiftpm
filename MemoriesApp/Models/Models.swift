@@ -253,6 +253,16 @@ struct Board: Identifiable, Codable, Hashable {
         (items.map(\.zIndex).max() ?? 0) + 1
     }
 
+    /// The topic most of this board's memories are filed under. New items adopt
+    /// it, so grouping stays useful without asking the user to categorise
+    /// anything by hand.
+    var dominantTopic: String? {
+        let topics = items.compactMap(\.topic).filter { !$0.isEmpty }
+        guard !topics.isEmpty else { return nil }
+        let counts = topics.reduce(into: [String: Int]()) { $0[$1, default: 0] += 1 }
+        return counts.max { $0.value < $1.value }?.key
+    }
+
     static let placeholder = Board(title: "—")
 }
 
@@ -266,6 +276,14 @@ struct Friend: Identifiable, Codable, Hashable {
     var isActive: Bool = false
     var ringStyle: RingStyle = .offline
     var avatarImageName: String?
+    /// Optional so documents written before these existed still decode — the
+    /// synthesised decoder treats `Optional` properties as `decodeIfPresent`.
+    var bio: String?
+    var lastSeen: Date?
+
+    var firstName: String {
+        name.split(separator: " ").first.map(String.init) ?? name
+    }
 }
 
 struct Invite: Identifiable, Codable, Hashable {

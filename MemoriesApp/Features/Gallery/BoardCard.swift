@@ -174,15 +174,17 @@ struct BoardCard: View {
 
             Spacer(minLength: 24)
 
+            // Fixed light text: this sits on the dark scrim painted over the
+            // cover photo, which does not change with the theme.
             Text(board.title)
                 .textStyle(isHero ? TypeScale.displayMD : TypeScale.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Palette.onScrim)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
 
             Text("\(board.memoryCount) memories · \(RelativeTime.updatedString(for: board.updatedAt))")
                 .textStyle(TypeScale.labelCaps)
-                .foregroundStyle(Palette.onSurfaceVariant)
+                .foregroundStyle(Palette.onScrimVariant)
                 .padding(.top, 6)
         }
         .padding(Space.unit * 3)

@@ -3,14 +3,45 @@ import SwiftUI
 struct RootView: View {
 
     @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var account: AccountStore
+    @EnvironmentObject private var preferences: Preferences
+
+    @State private var showsSettings = false
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Palette.void
-                .ignoresSafeArea()
+        ZStack {
+            Palette.void.ignoresSafeArea()
 
+            if account.isSignedIn {
+                signedIn
+            } else {
+                LoginView()
+                    .transition(.opacity)
+            }
+        }
+        .animation(.spring(response: 0.45, dampingFraction: 0.86), value: account.isSignedIn)
+    }
+
+    // MARK: Signed in
+
+    private var signedIn: some View {
+        ZStack(alignment: .bottom) {
             content
                 .ignoresSafeArea(.container, edges: .bottom)
+
+            // The board editor brings its own header; a second floating bar on
+            // top of it would be noise, and the canvas needs the room.
+            if !isEditingBoard {
+                VStack {
+                    TopBar(
+                        account: account.account,
+                        onOpenProfile: { store.tab = .profile },
+                        onOpenSettings: { showsSettings = true }
+                    )
+                    Spacer()
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
 
             LiquidGlassTabBar(
                 selection: $store.tab,
@@ -18,6 +49,23 @@ struct RootView: View {
             )
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: store.tab)
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: isEditingBoard)
+        .sheet(isPresented: $showsSettings) {
+            SettingsView()
+        }
+        .overlay {
+            if !account.hasCompletedOnboarding {
+                OnboardingOverlay {
+                    account.completeOnboarding()
+                }
+                .transition(.opacity)
+                .zIndex(100)
+            }
+        }
+    }
+
+    private var isEditingBoard: Bool {
+        store.tab == .board && store.openBoardID != nil
     }
 
     @ViewBuilder
@@ -28,7 +76,7 @@ struct RootView: View {
                 .transition(.opacity)
 
         case .memories:
-            MemoriesGridView()
+            MemoriesView()
                 .transition(.opacity)
 
         case .friends:
@@ -36,7 +84,7 @@ struct RootView: View {
                 .transition(.opacity)
 
         case .profile:
-            ProfileBoardView()
+            MyProfileView()
                 .transition(.opacity)
         }
     }

@@ -95,7 +95,7 @@ struct SectionHeader<Trailing: View>: View {
             if let accessory {
                 Image(systemName: accessory)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Palette.neon)
+                    .foregroundStyle(Palette.accent)
             }
 
             Text(title)

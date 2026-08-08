@@ -27,6 +27,7 @@ struct ItemInspector: View {
                     decorationSection
                 }
 
+                filingSection
                 geometrySection
             }
             .scrollContentBackground(.hidden)
@@ -200,7 +201,43 @@ struct ItemInspector: View {
                     item.scale = 1
                 }
             }
-            .foregroundStyle(Palette.neon)
+            .foregroundStyle(Palette.accent)
         }
+    }
+
+    /// Filing. Drives the Memories tab's day and topic grouping, so it lives on
+    /// the item rather than in a separate "organise" mode the user has to find.
+    @ViewBuilder
+    private var filingSection: some View {
+        if item.kind.isPhotographic {
+            Section("Filing") {
+                Picker("Topic", selection: topicBinding) {
+                    Text("Unfiled").tag("")
+                    ForEach(MemoryTopic.catalogue) { topic in
+                        Label(topic.name, systemImage: topic.icon).tag(topic.name)
+                    }
+                }
+
+                DatePicker(
+                    "Happened",
+                    selection: dateBinding,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+            }
+        }
+    }
+
+    private var topicBinding: Binding<String> {
+        Binding(
+            get: { item.topic ?? "" },
+            set: { item.topic = $0.isEmpty ? nil : $0 }
+        )
+    }
+
+    private var dateBinding: Binding<Date> {
+        Binding(
+            get: { item.createdAt ?? Date() },
+            set: { item.createdAt = $0 }
+        )
     }
 }

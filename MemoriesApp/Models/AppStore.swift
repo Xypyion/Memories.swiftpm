@@ -60,6 +60,49 @@ final class AppStore: ObservableObject {
         board.collaborators.compactMap { friend(id: $0) }
     }
 
+    /// Boards this friend is on. The one honest answer to "what do we have in
+    /// common", derived rather than stored so it can never go stale.
+    func boardsShared(with friendID: UUID) -> [Board] {
+        boards
+            .filter { $0.collaborators.contains(friendID) }
+            .sorted { $0.updatedAt > $1.updatedAt }
+    }
+
+    func activity(by friendID: UUID) -> [ActivityEvent] {
+        activity.filter { $0.friendID == friendID }
+    }
+
+    func memoriesShared(with friendID: UUID) -> Int {
+        boardsShared(with: friendID).reduce(0) { $0 + $1.memoryCount }
+    }
+
+    func removeFriend(id: UUID) {
+        friends.removeAll { $0.id == id }
+        invites.removeAll { $0.friendID == id }
+        activity.removeAll { $0.friendID == id }
+        for index in boards.indices {
+            boards[index].collaborators.removeAll { $0 == id }
+        }
+    }
+
+    func addFriend(_ friend: Friend) {
+        guard !friends.contains(where: { $0.id == friend.id }) else { return }
+        friends.append(friend)
+    }
+
+    /// Adds or removes a collaborator on a board. Used from a friend's profile,
+    /// so "invite them to this board" is one tap from the person, not buried in
+    /// the board's own share sheet.
+    func toggleCollaborator(_ friendID: UUID, on boardID: UUID) {
+        guard let index = boards.firstIndex(where: { $0.id == boardID }) else { return }
+        if let existing = boards[index].collaborators.firstIndex(of: friendID) {
+            boards[index].collaborators.remove(at: existing)
+        } else {
+            boards[index].collaborators.append(friendID)
+        }
+        boards[index].updatedAt = Date()
+    }
+
     /// A two-way binding to a board by identity, so the editor can mutate items
     /// in place without copying the whole board in and out.
     func binding(forBoard id: UUID) -> Binding<Board> {

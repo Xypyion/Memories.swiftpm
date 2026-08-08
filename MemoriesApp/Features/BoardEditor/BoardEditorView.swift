@@ -234,10 +234,10 @@ struct BoardEditorView: View {
                     HStack(spacing: 6) {
                         Text(board.title)
                             .textStyle(TypeScale.headline)
-                            .foregroundStyle(Palette.neon)
+                            .foregroundStyle(Palette.accent)
                         Image(systemName: "pencil")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Palette.neon.opacity(0.6))
+                            .foregroundStyle(Palette.accent.opacity(0.6))
                     }
                 }
                 .buttonStyle(.plain)
@@ -453,7 +453,7 @@ struct BoardEditorView: View {
         var rng = SeededGenerator(seed: store.boards[boardIndex].items.count &* 7919 &+ Int(zoom * 1000))
         let center = viewportCenter
 
-        let item = CanvasItem(
+        var item = CanvasItem(
             kind: kind,
             position: CGPoint(
                 x: center.x + CGFloat.random(in: -80 ... 80, using: &rng),
@@ -464,6 +464,10 @@ struct BoardEditorView: View {
             seed: Int.random(in: 0 ..< 100_000, using: &rng),
             width: width
         )
+        item.createdAt = Date()
+        // New memories inherit the board's prevailing topic, so the Memories tab
+        // groups them sensibly without the user having to file anything.
+        item.topic = store.boards[boardIndex].dominantTopic
 
         withAnimation(.spring(response: 0.42, dampingFraction: 0.68)) {
             store.boards[boardIndex].items.append(item)

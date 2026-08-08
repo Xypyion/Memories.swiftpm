@@ -115,6 +115,15 @@ enum SampleData {
         )
 
         roadtrip.items = [hero, polaroid, note, vibes, diner, star, ring]
+
+        // Stamped after assembly rather than inline, so the item declarations
+        // above stay readable as *placement* — which is what they're really
+        // demonstrating.
+        for index in roadtrip.items.indices {
+            roadtrip.items[index].topic = "Travel"
+            roadtrip.items[index].createdAt = daysAgo(index / 3, plusHours: Double(index % 3) * 3.5)
+        }
+
         roadtrip.ropes = [
             RopeConnection(a: hero.id, b: polaroid.id, sag: 0.20),
             RopeConnection(a: polaroid.id, b: diner.id, sag: 0.16)
@@ -134,7 +143,9 @@ enum SampleData {
         )
         studio.items = scatter(
             seeds: [3301, 3302, 3303, 3304, 3305],
-            captions: ["Take 4", "Monitors", "Cable spaghetti", "Board", "Mix down"]
+            captions: ["Take 4", "Monitors", "Cable spaghetti", "Board", "Mix down"],
+            topic: "Music",
+            startingDaysAgo: 2
         )
 
         // MARK: Daily Dumps
@@ -151,7 +162,9 @@ enum SampleData {
         )
         dumps.items = scatter(
             seeds: [4401, 4402, 4403, 4404, 4405, 4406, 4407],
-            captions: ["Tuesday", "Coffee", "The cat again", "Rain", "Nothing", "Window", "Late"]
+            captions: ["Tuesday", "Coffee", "The cat again", "Rain", "Nothing", "Window", "Late"],
+            topic: "Everyday",
+            startingDaysAgo: 0
         )
 
         // MARK: Graduation '23
@@ -168,7 +181,9 @@ enum SampleData {
         )
         graduation.items = scatter(
             seeds: [5501, 5502, 5503, 5504],
-            captions: ["Caps up", "The walk", "Mum crying", "After party"]
+            captions: ["Caps up", "The walk", "Mum crying", "After party"],
+            topic: "School",
+            startingDaysAgo: 40
         )
 
         // MARK: Trip to the Alps
@@ -185,7 +200,9 @@ enum SampleData {
         )
         alps.items = scatter(
             seeds: [6601, 6602, 6603, 6604, 6605],
-            captions: ["Golden hour", "Lift 4", "Frozen", "The hut", "Descent"]
+            captions: ["Golden hour", "Lift 4", "Frozen", "The hut", "Descent"],
+            topic: "Travel",
+            startingDaysAgo: 12
         )
 
         // MARK: Social
@@ -246,7 +263,16 @@ enum SampleData {
 
     /// Lays out photographic items in a loose, rotated scatter — never a grid,
     /// per the free-form canvas principle.
-    private static func scatter(seeds: [Int], captions: [String]) -> [CanvasItem] {
+    ///
+    /// Dates are spread backwards a day or two at a time from `startingDaysAgo`,
+    /// so the day view has genuine multi-day structure to show on first launch
+    /// rather than dumping everything under "Today".
+    private static func scatter(
+        seeds: [Int],
+        captions: [String],
+        topic: String,
+        startingDaysAgo: Int
+    ) -> [CanvasItem] {
         var rng = SeededGenerator(seed: seeds.first ?? 1)
 
         return seeds.enumerated().map { index, seed in
@@ -262,7 +288,10 @@ enum SampleData {
                 aspect: index.isMultiple(of: 3) ? 1.0 : 0.8
             )
 
-            return CanvasItem(
+            let dayOffset = startingDaysAgo + (index / 2)
+            let hourOffset = Double(index % 2) * 5.5
+
+            var item = CanvasItem(
                 kind: index.isMultiple(of: 2) ? .photo(payload) : .polaroid(payload),
                 position: CGPoint(x: x, y: y),
                 rotation: Double.random(in: -6 ... 6, using: &rng),
@@ -270,6 +299,13 @@ enum SampleData {
                 seed: seed,
                 width: CGFloat.random(in: 230 ... 300, using: &rng)
             )
+            item.createdAt = daysAgo(dayOffset, plusHours: hourOffset)
+            item.topic = topic
+            return item
         }
+    }
+
+    private static func daysAgo(_ days: Int, plusHours hours: Double = 0) -> Date {
+        Date().addingTimeInterval(-Double(days) * 86_400 + hours * 3_600)
     }
 }

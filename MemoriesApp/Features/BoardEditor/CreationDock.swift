@@ -90,7 +90,7 @@ struct CreationDock: View {
                 .foregroundStyle(Palette.onNeon)
                 .frame(width: 60, height: 60)
                 .background(Circle().fill(Palette.neon))
-                .overlay(Circle().strokeBorder(Palette.void, lineWidth: 2.5))
+                .overlay(Circle().strokeBorder(Palette.ink, lineWidth: 2.5))
                 .stickerShadow()
                 .neonGlow(radius: 18, opacity: 0.4)
         }
