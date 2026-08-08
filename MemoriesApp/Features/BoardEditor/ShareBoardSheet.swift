@@ -103,13 +103,8 @@ struct ShareBoardSheet: View {
 
             Spacer(minLength: 8)
 
-            if person.isActive {
-                HStack(spacing: 6) {
-                    PresenceDot(color: Palette.neon, size: 6)
-                    Text("ACTIVE")
-                        .textStyle(TypeScale.labelTiny)
-                        .foregroundStyle(Palette.neon)
-                }
+            if person.presence != .offline {
+                PresenceBadge(presence: person.presence, compact: true)
             }
         }
         .padding(16)

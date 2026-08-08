@@ -30,7 +30,7 @@ struct GalleryView: View {
                     bento(columnCount: columnCount)
                 }
                 .padding(.horizontal, horizontalPadding(for: geo.size.width))
-                .padding(.top, Space.unit * 6)
+                .padding(.top, Space.topBarClearance)
                 .padding(.bottom, Space.dockClearance)
                 .frame(maxWidth: 1440)
                 .frame(maxWidth: .infinity)
@@ -47,11 +47,11 @@ struct GalleryView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Memories")
                     .textStyle(TypeScale.labelCaps)
-                    .foregroundStyle(Palette.neon)
+                    .foregroundStyle(Palette.accent)
 
                 Text("Your Boards")
                     .textStyle(isWide ? TypeScale.displayLG : TypeScale.displayMD)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Palette.onSurface)
 
                 Text("Collections of chaotic moments.")
                     .textStyle(TypeScale.bodyLG)
@@ -79,7 +79,11 @@ struct GalleryView: View {
 
         return HStack(alignment: .top, spacing: Space.objectGap) {
             ForEach(columns.indices, id: \.self) { columnIndex in
-                VStack(spacing: Space.objectGap) {
+                // Lazy per column: with a long shelf of boards, only the covers
+                // near the viewport are ever built. Each cover is a five-layer
+                // collage, so this is the difference between rendering five
+                // boards and rendering fifty.
+                LazyVStack(spacing: Space.objectGap) {
                     ForEach(columns[columnIndex]) { tile in
                         view(for: tile)
                     }

@@ -67,10 +67,13 @@ struct BoardCollage: View {
         }
     }
 
+    /// Covers are decoration at a distance, never inspected closely, so they
+    /// render at thumbnail detail — no grain pass per tile.
     private func texture(for item: CanvasItem) -> some View {
         MemoryImage(
             payload: item.kind.photo ?? PhotoPayload(),
-            seed: item.seed
+            seed: item.seed,
+            detail: .thumbnail
         )
     }
 }
@@ -120,6 +123,10 @@ struct BoardCard: View {
         Button(action: onOpen) {
             ZStack(alignment: .bottomLeading) {
                 BoardCollage(board: board)
+                    // The collage is static per board: rasterise it once and
+                    // scroll the bitmap, instead of re-compositing five layered,
+                    // rotated, shadowed gradient stacks every frame.
+                    .drawingGroup()
                     .opacity(0.75)
 
                 scrim
@@ -206,13 +213,13 @@ struct CreateBoardCard: View {
             VStack(spacing: 16) {
                 Image(systemName: "plus")
                     .font(.system(size: 28, weight: .medium))
-                    .foregroundStyle(Palette.neon)
+                    .foregroundStyle(Palette.accent)
                     .frame(width: 68, height: 68)
-                    .background(Circle().fill(Palette.neon.opacity(0.10)))
+                    .background(Circle().fill(Palette.neon.opacity(0.16)))
 
                 Text("Create Board")
                     .textStyle(TypeScale.headline)
-                    .foregroundStyle(Palette.onSurfaceVariant)
+                    .foregroundStyle(Palette.onSurface)
             }
             .frame(maxWidth: .infinity)
             .frame(height: height)

@@ -94,6 +94,12 @@ struct CanvasItem: Identifiable, Codable, Hashable {
     /// Base width before `scale` is applied.
     var width: CGFloat = 260
 
+    /// When the memory happened. Optional so that documents written before this
+    /// field existed still decode — see the `Decodable` extension below.
+    var createdAt: Date?
+    /// Free-text category, matched against `MemoryTopic` for display.
+    var topic: String?
+
     /// Convenience for mutating the photo payload in place regardless of frame
     /// style, so photo editing code doesn't have to branch.
     var photoPayload: PhotoPayload? {
@@ -109,13 +115,105 @@ struct CanvasItem: Identifiable, Codable, Hashable {
     }
 }
 
+/// Tolerant decoding.
+///
+/// Declared in an extension rather than in the body so the memberwise
+/// initialiser survives. Every field is optional-with-fallback, which means a
+/// `state.json` written by an older build of the app still loads: adding a
+/// property can never again orphan somebody's boards. That guarantee is the
+/// whole point — this data is the user's memories, and there is no server copy.
+extension CanvasItem {
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        kind = try container.decode(CanvasItemKind.self, forKey: .kind)
+        position = try container.decodeIfPresent(CGPoint.self, forKey: .position) ?? .zero
+        rotation = try container.decodeIfPresent(Double.self, forKey: .rotation) ?? 0
+        scale = try container.decodeIfPresent(CGFloat.self, forKey: .scale) ?? 1
+        zIndex = try container.decodeIfPresent(Double.self, forKey: .zIndex) ?? 0
+        seed = try container.decodeIfPresent(Int.self, forKey: .seed) ?? 0
+        width = try container.decodeIfPresent(CGFloat.self, forKey: .width) ?? 260
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
+        topic = try container.decodeIfPresent(String.self, forKey: .topic)
+    }
+}
+
 /// A memory lifted out of its board, for surfaces that flatten every board into
 /// one list. A concrete type rather than a tuple, because Swift key paths — which
 /// `ForEach(id:)` needs — cannot address tuple elements.
 struct MemoryEntry: Identifiable {
+
     var board: Board
     var item: CanvasItem
+
     var id: UUID { item.id }
+
+    /// Items written before dates existed inherit their board's timestamp, so
+    /// the day view is never empty for legacy data.
+    var date: Date { item.createdAt ?? board.updatedAt }
+
+    var topic: MemoryTopic { MemoryTopic.resolve(item.topic) }
+
+    var caption: String { item.kind.photo?.caption ?? "" }
+}
+
+/// The topic catalogue.
+///
+/// Modelled as a value type with a fallback case rather than a closed enum, so a
+/// topic string that isn't in the catalogue still groups correctly instead of
+/// being dropped. New organisation schemes plug in the same way — see
+/// `MemoryGrouping`.
+struct MemoryTopic: Identifiable, Hashable {
+
+    var name: String
+    var icon: String
+    var tint: TopicTint
+
+    var id: String { name.lowercased() }
+
+    enum TopicTint: String, Hashable {
+        case neon, pink, lilac, blush, plain
+    }
+
+    static let catalogue: [MemoryTopic] = [
+        MemoryTopic(name: "School", icon: "graduationcap", tint: .lilac),
+        MemoryTopic(name: "Friends", icon: "person.2", tint: .pink),
+        MemoryTopic(name: "Travel", icon: "airplane", tint: .neon),
+        MemoryTopic(name: "Music", icon: "music.note", tint: .blush),
+        MemoryTopic(name: "Food", icon: "fork.knife", tint: .neon),
+        MemoryTopic(name: "Everyday", icon: "sun.horizon", tint: .plain)
+    ]
+
+    static let unfiled = MemoryTopic(name: "Unfiled", icon: "tray", tint: .plain)
+
+    static func resolve(_ raw: String?) -> MemoryTopic {
+        guard let raw, !raw.isEmpty else { return .unfiled }
+        return catalogue.first { $0.name.caseInsensitiveCompare(raw) == .orderedSame }
+            ?? MemoryTopic(name: raw, icon: "tag", tint: .plain)
+    }
+}
+
+/// How the Memories tab is organised. Adding a third scheme means adding a case
+/// here and a view — nothing else in the tab changes.
+enum MemoryGrouping: String, CaseIterable, Identifiable {
+    case day, topic
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .day: "By day"
+        case .topic: "By topic"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .day: "calendar"
+        case .topic: "tag"
+        }
+    }
 }
 
 /// A length of twine between two items.

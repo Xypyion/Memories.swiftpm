@@ -12,6 +12,9 @@ import SwiftUI
 /// * Drag translation is read in the *canvas* coordinate space, not the screen,
 ///   so a drag lands where the finger is at any zoom level without the caller
 ///   having to divide by the scale factor.
+///
+/// Performance: an in-flight gesture mutates **local `@State` only** and is
+/// committed to the model once, on release. See `CanvasLiveState` for why.
 struct CanvasItemView: View {
 
     @Binding var item: CanvasItem
@@ -20,21 +23,36 @@ struct CanvasItemView: View {
     var isRopeAnchor: Bool
     var isRopeArmed: Bool
 
+    /// Held as a plain reference, not `@ObservedObject` — this view drives it
+    /// but must not re-render from it.
+    let live: CanvasLiveState
+
     let onSelect: () -> Void
     let onActivate: () -> Void
     let onCommit: () -> Void
     let onDelete: () -> Void
 
-    @State private var dragOrigin: CGPoint?
-    @State private var baseScale: CGFloat?
-    @State private var baseRotation: Double?
+    // In-flight gesture state. None of this touches the store.
+    @State private var dragTranslation: CGSize = .zero
+    @State private var isDragging = false
+    @State private var pinchScale: CGFloat = 1
+    @State private var twistDegrees: Double = 0
+
+    private var renderedScale: CGFloat {
+        min(max(item.scale * pinchScale, 0.35), 3.0)
+    }
 
     var body: some View {
         content
             .overlay { chrome }
             .overlay(alignment: .topTrailing) { deleteButton }
-            .rotationEffect(.degrees(item.rotation))
-            .scaleEffect(item.scale)
+            .rotationEffect(.degrees(item.rotation + twistDegrees))
+            .scaleEffect(renderedScale)
+            .offset(dragTranslation)
+            // Lifts the object off the board while it is being moved. Stacking
+            // order is raised by the parent via `selection` — a zIndex applied
+            // here would do nothing, since this view has no siblings.
+            .shadow(color: Palette.shadowHeavy, radius: isDragging ? 26 : 0, y: isDragging ? 18 : 0)
             .contentShape(Rectangle())
             .onTapGesture(count: 2) { onActivate() }
             .onTapGesture { onSelect() }
@@ -66,7 +84,7 @@ struct CanvasItemView: View {
                 .scaleEffect(item.width / 160)
 
         case .decoration(let kind):
-            DecorationView(kind: kind, size: item.width, color: Palette.neon)
+            DecorationView(kind: kind, size: item.width, color: Palette.accent)
         }
     }
 
@@ -102,7 +120,7 @@ struct CanvasItemView: View {
                     .foregroundStyle(Palette.onPink)
                     .frame(width: 28, height: 28)
                     .background(Circle().fill(Palette.pink))
-                    .overlay(Circle().strokeBorder(Palette.void, lineWidth: 2))
+                    .overlay(Circle().strokeBorder(Palette.ink, lineWidth: 2))
             }
             .buttonStyle(PressableButtonStyle())
             .offset(x: 14, y: -14)
@@ -115,18 +133,23 @@ struct CanvasItemView: View {
     private var dragGesture: some Gesture {
         DragGesture(minimumDistance: 2, coordinateSpace: .named(BoardEditorView.canvasSpace))
             .onChanged { value in
-                if dragOrigin == nil {
-                    dragOrigin = item.position
+                if !isDragging {
+                    isDragging = true
+                    live.begin(item.id)
                     onSelect()
                 }
-                guard let origin = dragOrigin else { return }
-                item.position = CGPoint(
-                    x: origin.x + value.translation.width,
-                    y: origin.y + value.translation.height
-                )
+                dragTranslation = value.translation
+                live.update(value.translation)
             }
-            .onEnded { _ in
-                dragOrigin = nil
+            .onEnded { value in
+                // The single store write for the whole gesture.
+                item.position = CGPoint(
+                    x: item.position.x + value.translation.width,
+                    y: item.position.y + value.translation.height
+                )
+                dragTranslation = .zero
+                isDragging = false
+                live.end()
                 onCommit()
             }
     }
@@ -134,22 +157,21 @@ struct CanvasItemView: View {
     private var transformGesture: some Gesture {
         MagnifyGesture()
             .onChanged { value in
-                if baseScale == nil { baseScale = item.scale }
-                let base = baseScale ?? 1
-                item.scale = min(max(base * value.magnification, 0.35), 3.0)
+                pinchScale = value.magnification
             }
             .onEnded { _ in
-                baseScale = nil
+                item.scale = renderedScale
+                pinchScale = 1
                 onCommit()
             }
             .simultaneously(
                 with: RotateGesture()
                     .onChanged { value in
-                        if baseRotation == nil { baseRotation = item.rotation }
-                        item.rotation = (baseRotation ?? 0) + value.rotation.degrees
+                        twistDegrees = value.rotation.degrees
                     }
                     .onEnded { _ in
-                        baseRotation = nil
+                        item.rotation += twistDegrees
+                        twistDegrees = 0
                         onCommit()
                     }
             )

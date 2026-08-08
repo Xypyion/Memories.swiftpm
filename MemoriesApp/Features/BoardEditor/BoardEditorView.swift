@@ -13,7 +13,14 @@ struct BoardEditorView: View {
     let onClose: () -> Void
 
     @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var preferences: Preferences
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.motionPolicy) private var motion
+
+    /// `@State`, not `@StateObject`: this view owns the object's lifetime but
+    /// must not subscribe to it, or every gesture frame would re-render the
+    /// whole canvas. See `CanvasLiveState`.
+    @State private var live = CanvasLiveState()
 
     /// Named so item drags can report translation in board coordinates rather
     /// than screen coordinates.
@@ -40,7 +47,6 @@ struct BoardEditorView: View {
     @State private var showsRename = false
     @State private var draftTitle = ""
     @State private var confirmingDelete = false
-    @State private var showsPresence = true
 
     private var board: Board {
         store.board(id: boardID) ?? .placeholder
@@ -161,7 +167,14 @@ struct BoardEditorView: View {
         ZStack {
             CanvasBackdrop()
 
-            ropeLayer
+            // Ropes are their own observing view so that a drag redraws two
+            // shapes rather than the entire canvas.
+            RopeLayer(
+                ropes: board.ropes,
+                positions: itemPositions,
+                canvasSize: canvasSize,
+                live: live
+            )
 
             ForEach(boardBinding.items) { $item in
                 CanvasItemView(
@@ -169,35 +182,41 @@ struct BoardEditorView: View {
                     isSelected: selection == item.id,
                     isRopeAnchor: ropeAnchor == item.id,
                     isRopeArmed: isRopeArmed,
+                    live: live,
                     onSelect: { handleTap(on: item.id) },
                     onActivate: { inspecting = EditingTarget(id: item.id) },
                     onCommit: { store.touch(boardID: boardID) },
                     onDelete: { delete(itemID: item.id) }
                 )
                 .position(item.position)
-                .zIndex(item.zIndex)
+                // The selected item floats above the stack. Driven by
+                // `selection` (local `@State`) rather than by drag state, so it
+                // costs one re-render per selection, not one per frame.
+                .zIndex(selection == item.id ? item.zIndex + 5_000 : item.zIndex)
             }
 
-            if showsPresence, let ghost = store.collaborators(for: board).first(where: { $0.isActive }) {
+            if showsPresenceCursor, let ghost = activeCollaborator {
                 PresenceCursor(name: ghost.name, canvasSize: canvasSize)
                     .zIndex(9_999)
             }
         }
     }
 
-    private var ropeLayer: some View {
-        ZStack {
-            ForEach(board.ropes) { rope in
-                if let a = board.items.first(where: { $0.id == rope.a }),
-                   let b = board.items.first(where: { $0.id == rope.b }) {
-                    RopeView(from: a.position, to: b.position, sag: rope.sag)
-                }
-            }
-        }
-        .frame(width: canvasSize.width, height: canvasSize.height)
-        // No explicit zIndex: the ZStack's declaration order already puts ropes
-        // above the backdrop and below every item. A negative zIndex here would
-        // push them behind the opaque backdrop and they'd vanish.
+    /// Snapshot of every item's stored position, handed to the rope layer so it
+    /// never has to search `board.items` while a gesture is running.
+    private var itemPositions: [UUID: CGPoint] {
+        Dictionary(uniqueKeysWithValues: board.items.map { ($0.id, $0.position) })
+    }
+
+    private var activeCollaborator: Friend? {
+        store.collaborators(for: board).first { $0.isActive }
+    }
+
+    /// The demo cursor is an animation with a repeating timer behind it. It is
+    /// off when the user asked for less motion, and off when they switched the
+    /// demo off — never left running invisibly.
+    private var showsPresenceCursor: Bool {
+        preferences.showsPresenceDemo && !motion.isReduced
     }
 
     // MARK: Header
@@ -259,12 +278,12 @@ struct BoardEditorView: View {
                 borderColor: Palette.void
             )
 
-            if store.collaborators(for: board).contains(where: { $0.isActive }) {
-                HStack(spacing: 6) {
-                    PresenceDot(color: Palette.neon, size: 7)
+            if activeCollaborator != nil {
+                HStack(spacing: 7) {
+                    OnlineStatus(presence: .online, size: 7, surround: .clear)
                     Text("ON THE BOARD")
                         .textStyle(TypeScale.labelTiny)
-                        .foregroundStyle(Palette.neon)
+                        .foregroundStyle(Palette.accent)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
@@ -295,7 +314,7 @@ struct BoardEditorView: View {
                     Label("Rename board", systemImage: "pencil")
                 }
 
-                Toggle(isOn: $showsPresence) {
+                Toggle(isOn: $preferences.showsPresenceDemo) {
                     Label("Show live presence (demo)", systemImage: "dot.radiowaves.left.and.right")
                 }
 

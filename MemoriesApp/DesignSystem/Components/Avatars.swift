@@ -97,29 +97,4 @@ struct FacePile: View {
     }
 }
 
-/// A live presence dot. Pulses, because presence is the one thing on screen
-/// that is genuinely changing in real time.
-struct PresenceDot: View {
-
-    var color: Color = Palette.neon
-    var size: CGFloat = 10
-
-    @State private var pulsing = false
-
-    var body: some View {
-        Circle()
-            .fill(color)
-            .frame(width: size, height: size)
-            .overlay {
-                Circle()
-                    .stroke(color, lineWidth: 2)
-                    .scaleEffect(pulsing ? 2.4 : 1)
-                    .opacity(pulsing ? 0 : 0.9)
-            }
-            .onAppear {
-                withAnimation(.easeOut(duration: 1.8).repeatForever(autoreverses: false)) {
-                    pulsing = true
-                }
-            }
-    }
-}
+// Presence indicators live in `OnlineStatus.swift`.
