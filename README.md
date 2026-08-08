@@ -26,8 +26,11 @@ This is the intended path if you're on Windows.
 
 If Swift Playgrounds isn't installed, get it free from the App Store.
 
-Zipping the folder for transfer is fine — unzip on the iPad first, then tap the
-`.swiftpm` folder.
+Cloning works too, and produces a correctly named folder:
+
+```bash
+git clone https://github.com/Xypyion/Memories.swiftpm.git
+```
 
 ## Running it on a Mac
 
@@ -44,11 +47,9 @@ set your team under Signing & Capabilities — no other configuration needed.
 That module only exists inside Xcode's and Swift Playgrounds' SwiftPM, because
 an installable `.app` needs signing and an `Info.plist` that command-line SwiftPM
 does not produce. Running `swift build` on Windows or Linux will fail at the
-`import AppleProductTypes` line — that's expected, not a bug. Nothing in this
-package can be compiled on Windows, since SwiftUI and the iOS SDK are
-Apple-platform only.
+`import AppleProductTypes` line — that's expected, not a bug.
 
-**This code has not been compiled.** It was written on Windows, where no Swift
+**This code has not been compiled.** It is authored on Windows, where no Swift
 toolchain that can parse SwiftUI exists. Treat the first build on a Mac or iPad
 as the real verification step.
 
@@ -56,82 +57,150 @@ as the real verification step.
 
 ## What's in it
 
-Four screens behind a floating Liquid Glass dock.
+Sign-in, then four tabs behind a floating Liquid Glass dock, with a floating top
+bar carrying your identity and Settings.
 
-**Board** — a gallery of boards in an irregular bento, then the canvas itself.
-The canvas is the substance of the app:
+**Board** — a gallery of boards in an irregular bento, then the canvas itself:
 
 - Pan and pinch-zoom the viewport; drag any object at any time
 - Select an object to pinch-scale and two-finger-rotate it
-- Double-tap anything to open its inspector (caption, paper colour, sticker
-  vinyl, frame style, size, rotation)
+- Double-tap anything for its inspector — caption, paper colour, sticker vinyl,
+  frame style, size, rotation, plus the topic and date it's filed under
 - Add mounted prints, polaroids, sticky notes, stickers and hand-drawn marks
 - Import real photos from the iPad photo library
 - **Twine tool** — tap two memories to tie a braided rope between them; tap the
   same pair again to cut it
 - Rename, share (collaborator list + invite link), delete
 
-**Memories** — every photo across every board, flattened, searchable, filterable
-by favourites / shared / polaroids. Still mounted on paper, still crooked.
+**Memories** — every photo across every board, flattened, with two ways to
+organise it:
 
-**Friends** — invites you can accept or decline, an active-now row with live
-presence rings, an activity stream, and shared boards laid out as a pinned pile.
+- **By day** — chronological, newest first, with Today/Yesterday headings
+- **By topic** — grouped by category, catalogue order first, unfiled last
 
-**Profile** — the Personality Board. Avatar, speech-bubble status, streak badge,
-a spinning record for the current track, pinned artists, and hobby stickers.
-All editable through *customize profile*.
+Search and the favourites/shared/polaroids filters sit *above* grouping, so they
+survive a switch between views. Both schemes emit the same `[MemorySection]` and
+share their entire presentation layer.
+
+**Friends** — invites you can accept or decline, an active-now row, a searchable
+friend list, an activity stream, and shared boards laid out as a pinned pile.
+Every person is tappable and opens their profile: what you share, their recent
+activity, add-them-to-a-board, remove friend.
+
+**Profile** — your identity header (avatar, name, handle, bio, joined date),
+tappable stats, then the Personality Board: status bubble, spinning record,
+pinned artists, hobby stickers. Edit profile opens a real editor with draft
+state, validation, Save and Cancel.
+
+**Settings** — appearance (light/dark/system), account, notifications, privacy,
+motion, data, about. Reachable from the top bar on every tab.
+
+**Onboarding** — five steps, Next/Back/Skip/Finish, shown once. Replayable from
+Settings.
 
 ## Architecture
 
 ```
 MemoriesApp/
-  MemoriesRootApp.swift        @main
+  MemoriesRootApp.swift        @main — injects the three stores
   DesignSystem/                palette, type scale, elevation, glass, components
-    Components/                stickers, paper frames, avatars, rope, decorations
-  Models/                      domain types, persistence, seeded sample data
-  Navigation/                  root switch + the floating dock
+    Components/                stickers, paper, avatars, rope, decorations,
+                               OnlineStatus, Toast
+  Models/                      domain types, AppStore, AccountStore, Preferences
+  Navigation/                  root switch, floating dock, floating top bar
   Features/
-    Gallery/                   board bento + board covers
-    BoardEditor/               the canvas, items, dock, inspector, share
-    Memories/                  flattened photo grid
-    Friends/                   the hub
-    Profile/                   the personality board
+    Auth/                      LoginView
+    Onboarding/                OnboardingOverlay
+    Gallery/                   board bento + covers
+    BoardEditor/               canvas, items, CanvasLiveState, RopeLayer, dock,
+                               inspector, share
+    Memories/                  MemoriesView, grouping, toggle, tiles, masonry
+    Friends/                   hub, FriendCard, FriendProfileView
+    Profile/                   MyProfileView, ProfileHeader, PersonalityBoard,
+                               ProfileEditor
+    Settings/                  SettingsView
 ```
 
-- **State**: one `AppStore` (`ObservableObject`) injected as an environment
-  object. Chosen over `@Observable` deliberately — the macro adds a toolchain
-  dependency that buys nothing at this scale, and this has to build first time on
-  a machine I can't test on.
-- **Persistence**: the whole graph is `Codable` and written to
-  `Application Support/Memories/state.json`, debounced 1s so dragging a photo
-  doesn't re-encode the document 120 times a second.
-- **Images**: imported photos are downscaled to 1600px, written as JPEGs to
-  `Application Support/Memories/Images/`, and referenced by filename — never
-  inlined into the JSON.
-- **No image assets ship with the app.** Every photo, avatar and album cover you
-  see on first launch is drawn procedurally from a stable seed
-  (`MemoryTexture`, `SeededGenerator`). The app looks populated on any device
-  with a zero-byte asset catalogue, and the same seed always yields the same
-  picture, so objects don't reshuffle between renders.
+**Three stores, split by change rate.** `AppStore` holds boards and the social
+graph, `AccountStore` holds session and first-run state, `Preferences` holds
+settings. They are separate so that flipping a notification toggle does not
+invalidate every view subscribed to board data.
 
-## Two things that are simulated, and say so
+**Persistence.** Boards are `Codable` and written to
+`Application Support/Memories/state.json`, debounced 1s. Account and preferences
+go to `UserDefaults`. Imported photos are downscaled to 1600px, written as JPEGs
+under `Application Support/Memories/Images/`, and referenced by filename — never
+inlined into the JSON.
+
+**Forward-compatible decoding.** `CanvasItem` decodes every field with
+`decodeIfPresent` and a fallback, declared in an extension so the memberwise
+initialiser survives. Adding a property can never orphan somebody's boards.
+This data is the user's memories and there is no server copy.
+
+**No image assets ship with the app.** Every photo, avatar and cover on first
+launch is drawn procedurally from a stable seed, so the app looks populated on
+any device with a zero-byte asset catalogue.
+
+## Performance notes
+
+The Boards lag had one root cause and several contributors.
+
+**Root cause.** `CanvasItemView` wrote `item.position` through the `AppStore`
+binding on every drag frame — ~120 store mutations per second on a 120 Hz iPad,
+each firing `objectWillChange` and invalidating *every subscribed view in the
+app*. Now an in-flight gesture mutates local `@State` and commits once on
+release. `CanvasLiveState` carries the live offset to `RopeLayer` alone — held
+with `@State`, not `@StateObject`, so the editor keeps the reference without
+subscribing to it. Twine still tracks a drag in real time; nothing else redraws.
+
+**Contributors fixed:**
+
+- `MemoryTexture` drew three `.blur()`-ed ellipses through `.blendMode(.screen)`
+  inside a `.compositingGroup()`, plus a 220-op grain `Canvas` — per texture, and
+  board covers show five. Blur and blend each force an offscreen pass; gradients
+  do not. Now radial gradients, with grain opt-in via `detail`.
+- Board covers rasterise once via `.drawingGroup()` instead of re-compositing
+  five rotated, shadowed, layered stacks per frame.
+- Gallery columns, memory masonry, friend lists and board strips are `LazyVStack`
+  / `LazyHStack`, so off-screen covers are never built.
+- The presence indicator no longer runs a scale-and-fade loop on every avatar
+  simultaneously; the demo cursor's timer stops when the demo is off or motion is
+  reduced.
+
+**Extensibility.** Adding widget types to a board stays cheap: items are value
+types in one array, the canvas renders them through a single `ForEach`, and the
+gesture layer is generic over item kind. A new kind means a new
+`CanvasItemKind` case and a branch in `CanvasItemView.content`.
+
+## Accessibility
+
+Controls carry labels, hints and traits. `MotionPolicy` combines the system's
+Reduce Motion setting with the app's own override, and one switch governs the
+record spin, the presence halo, the demo cursor, toasts and view transitions.
+
+## What is simulated, and says so
 
 - **The collaborator cursor** on the canvas is a local animation. There is no
-  networking in this app. The board menu item that controls it is labelled
-  "Show live presence (demo)" and it can be switched off.
-- **The invite link** in the share sheet is a generated `memories://` string. It
-  copies to the clipboard; nothing resolves it.
-
-Everything else — placement, rotation, twine, photo import, favourites, search,
-profile edits — is real and persists across launches.
+  networking. The menu item that controls it reads "Show live presence (demo)".
+- **The invite link** in the share sheet is a generated `memories://` string that
+  copies to the clipboard and resolves to nothing.
+- **Login verifies nothing.** It asks for a username, not a password, precisely
+  so it doesn't teach you that credentials mean something here. `AccountStore`
+  models the real shape — a session that can be absent, created, validated,
+  restored and cleared — so a backend swaps in behind `signIn`/`restore` without
+  touching any view.
+- **Notification and privacy preferences** persist but are not enforced; there is
+  no push service and no server. The Settings footers say so on screen.
 
 ## Known gaps
 
-- No audio. The record widget displays the track the user set; it deliberately
-  has no transport controls, because it could not honour them.
-- No undo stack. `Board` is a value type, so an undo manager is a small addition
-  but not one I've made.
-- Accessibility: labels and traits are set on controls, but the free-form canvas
-  has no VoiceOver rotor or keyboard-driven placement. That is real work, not a
-  polish pass, and it should be scoped before launch.
-- Boards can be deleted from inside the editor only, not from the gallery.
+- No audio. The record widget displays the track you set and deliberately has no
+  transport controls it could not honour.
+- No undo stack. `Board` is a value type, so this is a small addition — but a
+  direct-manipulation canvas wants it before launch.
+- The free-form canvas has no VoiceOver rotor or keyboard-driven placement.
+  Chrome around it is labelled; the canvas itself is not navigable without
+  touch. That is real scoped work, not a polish pass.
+- Boards delete from inside the editor only, not from the gallery.
+- Friends are seeded sample data; there is no way to add a new person, because
+  there is no directory to add them from.

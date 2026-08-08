@@ -237,22 +237,77 @@ The one piece of architecture worth knowing.
 
 ---
 
-## 5. What is deliberately not built
+## 5. Light mode
+
+Added after the original handoff. The principle that made it cheap:
+
+> **Objects don't change colour when you turn the lights on.**
+
+Light mode changes the *board* — the desk the memories are lying on — not the
+memories. The surface ladder, body text and hairlines adapt; paper, vinyl,
+photographs and sticker keylines do not. That is why the tactile language
+survives the theme switch intact instead of becoming a washed-out inversion of
+itself, and it is also why a photo mount reads as an object in both themes: it is
+the same white it always was, sitting on a different desk.
+
+Mechanically, `Palette` tokens are `UIColor` dynamic providers rather than a
+`@Published` theme object. Every existing call site — `Palette.charcoal`,
+`Palette.onSurface` — adapts with no change, and reading a colour never triggers
+a re-render.
+
+Two tokens exist purely to keep contrast honest:
+
+- `Palette.accent` — the neon **as a foreground**. `#C8FF2E` is unreadable as
+  text on a light surface, so this darkens to the palette's own deep green
+  (`#4E6700`) there. `Palette.neon` remains the fill, and always carries
+  near-black `onNeon` text, so it is legible on either theme.
+- `Palette.onScrim` — text on the dark gradient painted over a cover photo. Fixed
+  light, because that gradient does not change with the theme.
+
+Shadow colours adapt too: a 70 %-black shadow reads as depth on a black board and
+as grime on a white one.
+
+## 6. Identity vs. expression
+
+The Profile tab now carries two distinct things, and keeping them apart is
+deliberate.
+
+`UserAccount` is **identity** — who you are, what you're called, what the app
+should call you. `UserProfile` is **expression** — the status bubble, the record,
+the locker door. They persist separately because they answer to different owners:
+identity would come from an auth backend, the Personality Board never would. A
+profile leads with identity and then hands the rest of the page to expression.
+
+`AccountStore` models the full session shape — absent, created, validated,
+restored, cleared, and guest-promoted-to-named — against local storage. A real
+identity provider swaps in behind `signIn`/`restore` without touching a single
+view.
+
+## 7. What is deliberately not built
 
 Stated so it is a decision on the record rather than a discovery in QA.
 
-- **No networking.** Presence and invites are simulated, and labelled.
+- **No networking.** Presence and invites are simulated, and labelled as demos in
+  the UI itself.
+- **Login verifies nothing**, and asks for no password on purpose. Prompting for
+  a credential we do not check would teach the user their credentials mean
+  something here, which is the beginning of a real security problem.
+- **Notification and privacy preferences persist but are not enforced.** There is
+  no push service and no server; the Settings footers say so on screen.
 - **No audio.** See §2.4.
 - **No undo stack.** `Board` is a value type so this is a small addition, but it
   is not done, and a direct-manipulation canvas will want it before launch.
-- **Canvas accessibility is incomplete.** Controls carry labels and traits, but
-  the free-form canvas has no VoiceOver rotor and no keyboard-driven placement.
-  That is real scoped work, not a polish pass.
+- **Canvas accessibility is incomplete.** Controls carry labels, hints and traits,
+  and `MotionPolicy` governs every animation from one switch — but the free-form
+  canvas has no VoiceOver rotor and no keyboard-driven placement. That is real
+  scoped work, not a polish pass.
 - **Boards delete from inside the editor only**, not from the gallery.
+- **Friends cannot be added**, only removed — there is no directory to add them
+  from without a backend.
 
 ---
 
-## 6. Verification status
+## 8. Verification status
 
 The package has **not been compiled**. It was authored on Windows, where no
 Swift toolchain capable of parsing SwiftUI exists. The first build on a Mac or

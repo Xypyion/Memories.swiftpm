@@ -6,7 +6,20 @@ struct RootView: View {
     @EnvironmentObject private var account: AccountStore
     @EnvironmentObject private var preferences: Preferences
 
+    /// Read here rather than in the `App` conformer: accessibility environment
+    /// values are populated for the view tree, not reliably at scene level.
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+
     @State private var showsSettings = false
+
+    /// One policy combining the system setting with the app's own override, so
+    /// no view has to consult two sources to decide whether to animate.
+    private var motionPolicy: MotionPolicy {
+        MotionPolicy(
+            systemPrefersReduced: systemReduceMotion,
+            appPrefersReduced: preferences.reduceMotion
+        )
+    }
 
     var body: some View {
         ZStack {
@@ -19,6 +32,7 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
+        .environment(\.motionPolicy, motionPolicy)
         .animation(.spring(response: 0.45, dampingFraction: 0.86), value: account.isSignedIn)
     }
 
