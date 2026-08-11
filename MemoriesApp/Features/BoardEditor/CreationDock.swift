@@ -8,13 +8,14 @@ import SwiftUI
 /// compete with wayfinding.
 struct CreationDock: View {
 
-    var isRopeArmed: Bool
+    var armedConnection: ConnectionStyle?
 
     let onAddPhoto: () -> Void
     let onAddNote: () -> Void
     let onAddSticker: () -> Void
     let onAdd: (QuickAdd) -> Void
-    let onToggleRope: () -> Void
+    let onConnect: (ConnectionStyle) -> Void
+    let onDraw: () -> Void
 
     var body: some View {
         HStack(spacing: 6) {
@@ -23,17 +24,12 @@ struct CreationDock: View {
 
             primaryButton
 
-            dockButton(icon: "sparkles", label: "Add sticker", action: onAddSticker)
-
-            dockButton(
-                icon: "link",
-                label: "Connect with twine",
-                isActive: isRopeArmed,
-                action: onToggleRope
-            )
+            dockButton(icon: "seal", label: "Add sticker", action: onAddSticker)
+            connectButton
+            dockButton(icon: "pencil.tip.crop.circle", label: "Draw", action: onDraw)
         }
         .padding(8)
-        .liquidGlass(Capsule(style: .continuous), tint: 0.04, strokeOpacity: 0.16, shadowRadius: 34)
+        .solidGlass(Capsule(style: .continuous))
     }
 
     private func dockButton(
@@ -58,30 +54,52 @@ struct CreationDock: View {
         .accessibilityLabel(label)
     }
 
+    /// Twine and arrows are the same tool with two outputs, so they share one
+    /// button. Tapping while armed disarms; otherwise it offers the choice.
+    private var connectButton: some View {
+        Menu {
+            ForEach(ConnectionStyle.allCases, id: \.self) { style in
+                Button {
+                    onConnect(style)
+                } label: {
+                    Text(style.title)
+                }
+            }
+            if armedConnection != nil {
+                Divider()
+                Button("Stop connecting") { onConnect(armedConnection ?? .twine) }
+            }
+        } label: {
+            Image(systemName: "link")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(armedConnection != nil ? Palette.onNeon : Palette.onSurfaceVariant)
+                .frame(width: 50, height: 50)
+                .background {
+                    if armedConnection != nil {
+                        Circle().fill(Palette.neon)
+                    }
+                }
+                .contentShape(Circle())
+        }
+        .accessibilityLabel("Connect two memories")
+    }
+
     /// The neon key. Bordered in black so it reads as a thick vinyl button
     /// resting on the glass rather than a hole cut through it.
     private var primaryButton: some View {
         Menu {
             Section("Photos") {
-                Button { onAdd(.mountedPrint) } label: {
-                    Label("Mounted print", systemImage: "photo")
-                }
-                Button { onAdd(.polaroid) } label: {
-                    Label("Polaroid", systemImage: "camera")
-                }
+                Button { onAdd(.mountedPrint) } label: { Text("Mounted print") }
+                Button { onAdd(.polaroid) } label: { Text("Polaroid") }
             }
             Section("Paper") {
                 ForEach(NoteColor.allCases, id: \.self) { color in
-                    Button { onAdd(.note(color)) } label: {
-                        Label("\(color.displayName) note", systemImage: "note.text")
-                    }
+                    Button { onAdd(.note(color)) } label: { Text("\(color.displayName) note") }
                 }
             }
             Section("Marks") {
                 ForEach(DecorationKind.allCases, id: \.self) { kind in
-                    Button { onAdd(.decoration(kind)) } label: {
-                        Label(kind.rawValue.capitalized, systemImage: "scribble.variable")
-                    }
+                    Button { onAdd(.decoration(kind)) } label: { Text(kind.rawValue.capitalized) }
                 }
             }
         } label: {
@@ -92,7 +110,6 @@ struct CreationDock: View {
                 .background(Circle().fill(Palette.neon))
                 .overlay(Circle().strokeBorder(Palette.ink, lineWidth: 2.5))
                 .stickerShadow()
-                .neonGlow(radius: 18, opacity: 0.4)
         }
         .padding(.horizontal, 4)
         .accessibilityLabel("Add to board")
@@ -103,12 +120,12 @@ enum QuickAdd {
     case mountedPrint
     case polaroid
     case note(NoteColor)
-    case sticker(StickerStyle)
+    case sticker(StickerPayload)
     case decoration(DecorationKind)
 }
 
-/// A transient instruction banner. Used only for modal tools (twine), where the
-/// user needs to know the app is waiting on them.
+/// A transient instruction banner. Used only for modal tools, where the user
+/// needs to know the app is waiting on them.
 struct ToolHintBanner: View {
 
     let text: String
@@ -126,7 +143,52 @@ struct ToolHintBanner: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
-        .liquidGlass(Capsule(style: .continuous), tint: 0.06, shadowRadius: 20)
+        .solidGlass(Capsule(style: .continuous))
         .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+}
+
+/// The menu that appears where you long-press an empty part of the board.
+struct CanvasPasteMenu: View {
+
+    let hasPasteContent: Bool
+    let onPaste: () -> Void
+    let onAddNote: () -> Void
+    let onAddPhoto: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            row(title: hasPasteContent ? "Paste here" : "Nothing to paste",
+                enabled: hasPasteContent,
+                action: onPaste)
+
+            Divider().overlay(Palette.hairline)
+
+            row(title: "New note here", enabled: true, action: onAddNote)
+
+            Divider().overlay(Palette.hairline)
+
+            row(title: "Add photo here", enabled: true, action: onAddPhoto)
+        }
+        .frame(width: 210)
+        .solidGlass(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+    }
+
+    private func row(title: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button {
+            action()
+            onDismiss()
+        } label: {
+            Text(title)
+                .textStyle(TypeScale.bodyMD)
+                .foregroundStyle(enabled ? Palette.onSurface : Palette.onSurfaceVariant.opacity(0.5))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 13)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 }

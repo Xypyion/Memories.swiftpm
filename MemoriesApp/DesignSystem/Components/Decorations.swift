@@ -127,7 +127,6 @@ struct DecorationView: View {
             }
         }
         .frame(width: size, height: kind == .squiggle ? size * 0.4 : size)
-        .shadow(color: color.opacity(0.45), radius: 12)
     }
 }
 

@@ -27,7 +27,6 @@ struct TapeStrip: View {
             .overlay(Rectangle().strokeBorder(Color.white.opacity(0.22), lineWidth: 0.5))
             .background(.ultraThinMaterial)
             .rotationEffect(.degrees(rotation))
-            .shadow(color: .black.opacity(0.3), radius: 3, y: 2)
             .allowsHitTesting(false)
     }
 }
@@ -56,7 +55,6 @@ struct PushPin: View {
             .overlay {
                 Circle().strokeBorder(Color.white.opacity(0.35), lineWidth: 1)
             }
-            .shadow(color: .black.opacity(0.6), radius: 4, y: 3)
             .allowsHitTesting(false)
     }
 }
@@ -89,12 +87,10 @@ struct MountedPhoto: View {
                     Spacer(minLength: 0)
 
                     if payload.isFavorite {
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(Palette.onPink)
-                            .frame(width: 22, height: 22)
-                            .background(Circle().fill(Palette.pink))
-                            .overlay(Circle().strokeBorder(Palette.paper, lineWidth: 2))
+                        Circle()
+                            .fill(Palette.pink)
+                            .frame(width: 12, height: 12)
+                            .overlay(Circle().strokeBorder(Palette.paper, lineWidth: 2).padding(-2))
                     }
                 }
                 .frame(width: width)

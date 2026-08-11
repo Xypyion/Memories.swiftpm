@@ -214,7 +214,7 @@ struct ItemInspector: View {
                 Picker("Topic", selection: topicBinding) {
                     Text("Unfiled").tag("")
                     ForEach(MemoryTopic.catalogue) { topic in
-                        Label(topic.name, systemImage: topic.icon).tag(topic.name)
+                        Text(topic.name).tag(topic.name)
                     }
                 }
 

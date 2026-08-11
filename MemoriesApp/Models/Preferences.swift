@@ -10,7 +10,7 @@ final class Preferences: ObservableObject {
 
     @Published var themeMode: ThemeMode { didSet { save() } }
     @Published var reduceMotion: Bool { didSet { save() } }
-    @Published var showsPresenceDemo: Bool { didSet { save() } }
+    @Published var canvasGrid: CanvasGridStyle { didSet { save() } }
 
     @Published var notifyOnInvite: Bool { didSet { save() } }
     @Published var notifyOnActivity: Bool { didSet { save() } }
@@ -27,7 +27,7 @@ final class Preferences: ObservableObject {
         let stored = Preferences.load()
         themeMode = stored?.themeMode ?? .system
         reduceMotion = stored?.reduceMotion ?? false
-        showsPresenceDemo = stored?.showsPresenceDemo ?? true
+        canvasGrid = stored?.canvasGrid ?? .dots
         notifyOnInvite = stored?.notifyOnInvite ?? true
         notifyOnActivity = stored?.notifyOnActivity ?? true
         notifyOnReaction = stored?.notifyOnReaction ?? false
@@ -49,7 +49,7 @@ final class Preferences: ObservableObject {
     func resetToDefaults() {
         themeMode = .system
         reduceMotion = false
-        showsPresenceDemo = true
+        canvasGrid = .dots
         notifyOnInvite = true
         notifyOnActivity = true
         notifyOnReaction = false
@@ -63,7 +63,9 @@ final class Preferences: ObservableObject {
     private struct Snapshot: Codable {
         var themeMode: ThemeMode
         var reduceMotion: Bool
-        var showsPresenceDemo: Bool
+        /// Optional so a preferences blob written before the grid existed still
+        /// decodes instead of resetting every other setting to its default.
+        var canvasGrid: CanvasGridStyle?
         var notifyOnInvite: Bool
         var notifyOnActivity: Bool
         var notifyOnReaction: Bool
@@ -82,7 +84,7 @@ final class Preferences: ObservableObject {
         let snapshot = Snapshot(
             themeMode: themeMode,
             reduceMotion: reduceMotion,
-            showsPresenceDemo: showsPresenceDemo,
+            canvasGrid: canvasGrid,
             notifyOnInvite: notifyOnInvite,
             notifyOnActivity: notifyOnActivity,
             notifyOnReaction: notifyOnReaction,
@@ -113,6 +115,21 @@ enum ThemeMode: String, Codable, CaseIterable, Identifiable {
         case .system: "circle.lefthalf.filled"
         case .light: "sun.max"
         case .dark: "moon.stars"
+        }
+    }
+}
+
+/// What the board surface looks like underneath the memories.
+enum CanvasGridStyle: String, Codable, CaseIterable, Identifiable {
+    case none, dots, lines
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .none: "Off"
+        case .dots: "Dots"
+        case .lines: "Lines"
         }
     }
 }

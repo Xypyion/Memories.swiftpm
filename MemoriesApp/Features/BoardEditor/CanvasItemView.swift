@@ -20,8 +20,8 @@ struct CanvasItemView: View {
     @Binding var item: CanvasItem
 
     var isSelected: Bool
-    var isRopeAnchor: Bool
-    var isRopeArmed: Bool
+    var isConnectionAnchor: Bool
+    var isConnectionArmed: Bool
 
     /// Held as a plain reference, not `@ObservedObject` — this view drives it
     /// but must not re-render from it.
@@ -54,8 +54,14 @@ struct CanvasItemView: View {
             // here would do nothing, since this view has no siblings.
             .shadow(color: Palette.shadowHeavy, radius: isDragging ? 26 : 0, y: isDragging ? 18 : 0)
             .contentShape(Rectangle())
-            .onTapGesture(count: 2) { onActivate() }
-            .onTapGesture { onSelect() }
+            // One tap recogniser, not two.
+            //
+            // A `count: 2` gesture alongside a `count: 1` gesture forces every
+            // single tap to wait out the double-tap window before it can fire —
+            // which is exactly the delay you feel when selecting something. Now
+            // the first tap selects instantly, and tapping an already-selected
+            // object opens it. Same two actions, no waiting for either.
+            .onTapGesture { isSelected ? onActivate() : onSelect() }
             .gesture(dragGesture)
             .simultaneousGesture(transformGesture, including: isSelected ? .all : .subviews)
             .animation(.spring(response: 0.3, dampingFraction: 0.75), value: isSelected)
@@ -92,18 +98,17 @@ struct CanvasItemView: View {
 
     @ViewBuilder
     private var chrome: some View {
-        if isSelected || isRopeAnchor {
+        if isSelected || isConnectionAnchor {
             RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
                 .strokeBorder(
-                    isRopeAnchor ? Palette.pink : Palette.neon,
-                    style: StrokeStyle(lineWidth: 2, dash: isRopeAnchor ? [6, 5] : [])
+                    isConnectionAnchor ? Palette.pink : Palette.neon,
+                    style: StrokeStyle(lineWidth: 2, dash: isConnectionAnchor ? [6, 5] : [])
                 )
                 .padding(-8)
-                .shadow(color: (isRopeAnchor ? Palette.pink : Palette.neon).opacity(0.5), radius: 10)
                 .allowsHitTesting(false)
-        } else if isRopeArmed {
-            // While the twine tool is armed, every item advertises that it is a
-            // valid target.
+        } else if isConnectionArmed {
+            // While the connect tool is armed, every item advertises that it is
+            // a valid target.
             RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
                 .strokeBorder(Palette.pink.opacity(0.35), lineWidth: 1.5)
                 .padding(-6)
@@ -113,7 +118,7 @@ struct CanvasItemView: View {
 
     @ViewBuilder
     private var deleteButton: some View {
-        if isSelected {
+        if isSelected, !isConnectionArmed {
             Button(action: onDelete) {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .bold))

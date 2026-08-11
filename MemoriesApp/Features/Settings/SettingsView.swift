@@ -23,6 +23,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 appearanceSection
+                boardSection
                 accountSection
                 notificationsSection
                 privacySection
@@ -73,7 +74,7 @@ struct SettingsView: View {
         Section {
             Picker("Theme", selection: $preferences.themeMode) {
                 ForEach(ThemeMode.allCases) { mode in
-                    Label(mode.title, systemImage: mode.icon).tag(mode)
+                    Text(mode.title).tag(mode)
                 }
             }
             .pickerStyle(.segmented)
@@ -159,11 +160,25 @@ struct SettingsView: View {
     private var accessibilitySection: some View {
         Section {
             Toggle("Reduce motion", isOn: $preferences.reduceMotion)
-            Toggle("Live presence demo", isOn: $preferences.showsPresenceDemo)
         } header: {
             Text("Motion")
         } footer: {
-            Text("Reduce motion stops the record spinning, the presence halo breathing, and the demo cursor drifting. Your iPad's own Reduce Motion setting is honoured too — this only adds to it.")
+            Text("Stops the record spinning and removes screen transitions. Your iPad's own Reduce Motion setting is honoured too — this only adds to it.")
+        }
+    }
+
+    private var boardSection: some View {
+        Section {
+            Picker("Grid", selection: $preferences.canvasGrid) {
+                ForEach(CanvasGridStyle.allCases) { style in
+                    Text(style.title).tag(style)
+                }
+            }
+            .pickerStyle(.segmented)
+        } header: {
+            Text("Board")
+        } footer: {
+            Text("The surface your memories sit on. Also switchable from a board's own menu.")
         }
     }
 

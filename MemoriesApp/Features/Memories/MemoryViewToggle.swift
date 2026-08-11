@@ -34,15 +34,11 @@ struct MemoryViewToggle: View {
                 grouping = option
             }
         } label: {
-            HStack(spacing: 7) {
-                Image(systemName: option.icon)
-                    .font(.system(size: 13, weight: .semibold))
-                Text(option.title)
-                    .textStyle(TypeScale.sticker)
-            }
-            .foregroundStyle(isSelected ? Palette.onNeon : Palette.onSurfaceVariant)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 9)
+            Text(option.title)
+                .textStyle(TypeScale.sticker)
+                .foregroundStyle(isSelected ? Palette.onNeon : Palette.onSurfaceVariant)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 9)
             .background {
                 if isSelected {
                     Capsule()
@@ -59,28 +55,25 @@ struct MemoryViewToggle: View {
 
 /// The heading above each run of memories. One component for both schemes, so a
 /// date header and a topic header can never drift apart visually.
+///
+/// Type only. "Today" and "School" are already the clearest possible labels for
+/// themselves; a calendar glyph and a mortarboard beside them added weight
+/// without adding meaning, and repeated down a long page they became the loudest
+/// thing on it.
 struct MemorySectionHeader: View {
 
     let section: MemorySection
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: section.icon)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(section.tint)
-                .frame(width: 32, height: 32)
-                .background(Circle().fill(section.tint.opacity(0.14)))
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(section.title)
+                .textStyle(TypeScale.headline)
+                .foregroundStyle(Palette.onSurface)
+                .lineLimit(1)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(section.title)
-                    .textStyle(TypeScale.headline)
-                    .foregroundStyle(Palette.onSurface)
-                    .lineLimit(1)
-
-                Text(section.subtitle.uppercased())
-                    .textStyle(TypeScale.labelTiny)
-                    .foregroundStyle(Palette.onSurfaceVariant)
-            }
+            Text(section.subtitle.uppercased())
+                .textStyle(TypeScale.labelTiny)
+                .foregroundStyle(Palette.onSurfaceVariant)
 
             Spacer(minLength: 8)
         }

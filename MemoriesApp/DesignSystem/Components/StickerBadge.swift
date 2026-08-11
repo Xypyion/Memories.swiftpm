@@ -69,6 +69,8 @@ extension StickerStyle {
         case .pink: Palette.pink
         case .paper: Palette.paper
         case .ink: Palette.ink
+        case .blush: Palette.blush
+        case .lilac: Palette.lilac
         }
     }
 
@@ -78,6 +80,8 @@ extension StickerStyle {
         case .pink: Palette.onPink
         case .paper: Palette.onPaper
         case .ink: Palette.neon
+        case .blush: Palette.onBlush
+        case .lilac: Palette.onLilac
         }
     }
 
@@ -93,6 +97,8 @@ extension StickerStyle {
         case .pink: "Pink"
         case .paper: "Paper"
         case .ink: "Ink"
+        case .blush: "Blush"
+        case .lilac: "Lilac"
         }
     }
 }

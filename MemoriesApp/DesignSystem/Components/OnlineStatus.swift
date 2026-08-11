@@ -1,20 +1,14 @@
 import SwiftUI
 
-/// Presence, stated once and quietly.
+/// Presence, stated once and then left alone.
 ///
-/// The previous indicator fired an expanding ring that scaled 2.4× and faded to
-/// zero, on a loop, on every avatar in the friends list at once. A dozen of
-/// those firing out of phase reads as a page of flashing lights — it competes
-/// with the content it is annotating, which is exactly backwards for an ambient
-/// signal.
+/// This started as an expanding, fading ring on a loop. Then it became a
+/// breathing halo. Both were wrong for the same reason: presence is a *fact*,
+/// not an event, and animating a fact makes a dozen friend avatars flicker at
+/// once while you are trying to read past them.
 ///
-/// This version keeps the dot completely still and breathes a soft halo behind
-/// it: opacity only, no scale, slow, and never fully off, so at any instant it
-/// still reads as a solid green dot. Peripheral vision registers "alive"; direct
-/// vision registers "online" and moves on.
-///
-/// With reduced motion it becomes exactly what the brief suggested — a static
-/// dot — with the halo held at a constant mid opacity so it loses no legibility.
+/// It is now a plain dot. No pulse, no halo, no glow. The ring around it is a
+/// cut-out in the surface behind, so it stays crisp on a photo or a card.
 struct OnlineStatus: View {
 
     enum Presence {
@@ -24,7 +18,7 @@ struct OnlineStatus: View {
 
         var color: Color {
             switch self {
-            case .online: Palette.neon
+            case .online: Color(hex: 0x3ED66B)
             case .recentlyActive: Palette.pink
             case .offline: Palette.outline
             }
@@ -37,8 +31,6 @@ struct OnlineStatus: View {
             case .offline: "Offline"
             }
         }
-
-        var animates: Bool { self == .online }
     }
 
     let presence: Presence
@@ -46,36 +38,14 @@ struct OnlineStatus: View {
     /// The colour the dot is sitting on, so it reads as a cut-out.
     var surround: Color = Palette.void
 
-    @Environment(\.motionPolicy) private var motion
-    @State private var breathing = false
-
-    private var haloOpacity: Double {
-        guard presence.animates, !motion.isReduced else { return 0.34 }
-        return breathing ? 0.10 : 0.42
-    }
-
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(presence.color)
-                .opacity(haloOpacity)
-                .frame(width: size * 2.05, height: size * 2.05)
-
-            Circle()
-                .fill(presence.color)
-                .frame(width: size, height: size)
-                .overlay {
-                    Circle().strokeBorder(surround.opacity(0.85), lineWidth: size * 0.16)
-                }
-        }
-        .frame(width: size * 2.05, height: size * 2.05)
-        .onAppear {
-            guard presence.animates, !motion.isReduced else { return }
-            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
-                breathing = true
+        Circle()
+            .fill(presence.color)
+            .frame(width: size, height: size)
+            .overlay {
+                Circle().strokeBorder(surround, lineWidth: size * 0.22)
             }
-        }
-        .accessibilityLabel(presence.label)
+            .accessibilityLabel(presence.label)
     }
 }
 
@@ -95,13 +65,13 @@ struct PresenceBadge: View {
         }
         .padding(.horizontal, compact ? 8 : 11)
         .padding(.vertical, compact ? 4 : 6)
-        .background(Capsule().fill(presence.color.opacity(0.12)))
+        .background(Capsule().fill(presence.color.opacity(0.14)))
         .accessibilityElement(children: .combine)
     }
 
     private var foreground: Color {
         switch presence {
-        case .online: Palette.accent
+        case .online: Color.adaptive(light: 0x1E7A3C, dark: 0x3ED66B)
         case .recentlyActive: Palette.pinkAccent
         case .offline: Palette.onSurfaceVariant
         }

@@ -54,12 +54,9 @@ struct ProfileHeader: View {
             }
 
             if let joinedAt {
-                Label(
-                    "Keeping memories since \(joinedAt.formatted(.dateTime.month(.wide).year()))",
-                    systemImage: "calendar"
-                )
-                .textStyle(TypeScale.labelCaps)
-                .foregroundStyle(Palette.onSurfaceVariant.opacity(0.8))
+                Text("Keeping memories since \(joinedAt.formatted(.dateTime.month(.wide).year()))")
+                    .textStyle(TypeScale.labelCaps)
+                    .foregroundStyle(Palette.onSurfaceVariant.opacity(0.8))
             }
         }
         .frame(maxWidth: .infinity)
@@ -105,10 +102,6 @@ struct ProfileStatsRow: View {
                     stat.action?()
                 } label: {
                     VStack(spacing: 6) {
-                        Image(systemName: stat.icon)
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(Palette.accent)
-
                         Text("\(stat.value)")
                             .textStyle(TypeScale.headline)
                             .foregroundStyle(Palette.onSurface)

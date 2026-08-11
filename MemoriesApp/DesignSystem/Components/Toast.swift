@@ -71,7 +71,7 @@ private struct ToastModifier: ViewModifier {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 13)
-        .liquidGlass(Capsule(style: .continuous), tint: 0.06, shadowRadius: 22)
+        .solidGlass(Capsule(style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isStaticText)
     }

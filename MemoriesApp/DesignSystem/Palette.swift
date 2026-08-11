@@ -120,6 +120,12 @@ enum Palette {
 
     // MARK: Hairlines and shadows (adapt)
 
+    /// Backing for floating chrome (the dock, the profile pill, the settings
+    /// button). Opaque enough that a label on it stays legible no matter what is
+    /// scrolling behind — a black cover photo in light mode, a white paper note
+    /// in dark mode.
+    static let chromeSurface = Color.adaptive(light: 0xFFFFFF, dark: 0x141414, lightAlpha: 0.93, darkAlpha: 0.90)
+
     static let hairline = Color.adaptive(light: 0x000000, dark: 0xFFFFFF, lightAlpha: 0.10, darkAlpha: 0.10)
     static let hairlineBright = Color.adaptive(light: 0x000000, dark: 0xFFFFFF, lightAlpha: 0.18, darkAlpha: 0.20)
 

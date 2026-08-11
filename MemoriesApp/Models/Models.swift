@@ -2,8 +2,11 @@ import SwiftUI
 
 // MARK: - Vocabulary
 
+/// Vinyl stock a sticker can be cut from. Adding cases is safe for existing
+/// documents — a raw-value enum only fails to decode values it has never seen,
+/// and old boards only ever stored the original four.
 enum StickerStyle: String, Codable, Hashable, CaseIterable {
-    case neon, pink, paper, ink
+    case neon, pink, paper, ink, blush, lilac
 }
 
 enum NoteColor: String, Codable, Hashable, CaseIterable {
@@ -117,11 +120,34 @@ struct CanvasItem: Identifiable, Codable, Hashable {
 
 /// Tolerant decoding.
 ///
-/// Declared in an extension rather than in the body so the memberwise
-/// initialiser survives. Every field is optional-with-fallback, which means a
+/// Declared in extensions rather than in the type bodies so the memberwise
+/// initialisers survive. Every field is optional-with-fallback, which means a
 /// `state.json` written by an older build of the app still loads: adding a
 /// property can never again orphan somebody's boards. That guarantee is the
 /// whole point — this data is the user's memories, and there is no server copy.
+///
+/// `strokes` is exactly the case this protects against: boards saved before the
+/// drawing tool existed have no such key, and without this they would fail to
+/// decode and take every memory on them down.
+extension Board {
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        title = try container.decodeIfPresent(String.self, forKey: .title) ?? "Untitled Board"
+        caption = try container.decodeIfPresent(String.self, forKey: .caption) ?? ""
+        badge = try container.decodeIfPresent(String.self, forKey: .badge) ?? ""
+        badgeStyle = try container.decodeIfPresent(StickerStyle.self, forKey: .badgeStyle) ?? .neon
+        seed = try container.decodeIfPresent(Int.self, forKey: .seed) ?? 0
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? Date()
+        collaborators = try container.decodeIfPresent([UUID].self, forKey: .collaborators) ?? []
+        items = try container.decodeIfPresent([CanvasItem].self, forKey: .items) ?? []
+        ropes = try container.decodeIfPresent([RopeConnection].self, forKey: .ropes) ?? []
+        strokes = try container.decodeIfPresent([DrawnStroke].self, forKey: .strokes) ?? []
+        tileWeight = try container.decodeIfPresent(TileWeight.self, forKey: .tileWeight) ?? .standard
+    }
+}
+
 extension CanvasItem {
 
     init(from decoder: Decoder) throws {
@@ -216,12 +242,53 @@ enum MemoryGrouping: String, CaseIterable, Identifiable {
     }
 }
 
-/// A length of twine between two items.
+/// How two items are joined.
+enum ConnectionStyle: String, Codable, Hashable, CaseIterable {
+    /// Braided twine, sagging under its own weight. Says "these belong
+    /// together".
+    case twine
+    /// A drawn arrow. Says "this one leads to that one" — direction, not just
+    /// association.
+    case arrow
+
+    var title: String {
+        switch self {
+        case .twine: "Twine"
+        case .arrow: "Arrow"
+        }
+    }
+}
+
+/// A connection between two items.
 struct RopeConnection: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
     var a: UUID
     var b: UUID
     var sag: CGFloat = 0.20
+    /// Optional so boards saved before arrows existed still decode; absent means
+    /// twine, which is what those boards were drawn with.
+    var style: ConnectionStyle?
+
+    var resolvedStyle: ConnectionStyle { style ?? .twine }
+}
+
+/// One freehand stroke drawn on the board.
+///
+/// Stored on the board as data rather than rasterised into an image, so it
+/// survives zooming at full resolution, can be erased individually, and costs a
+/// handful of floats instead of a bitmap.
+struct DrawnStroke: Identifiable, Codable, Hashable {
+
+    var id: UUID = UUID()
+    /// Points in the board's own coordinate space.
+    var points: [CGPoint]
+    var colorHex: UInt32
+    var width: CGFloat
+    /// Highlighter strokes draw wide, translucent and multiplied, so they tint
+    /// what is underneath instead of covering it.
+    var isHighlighter: Bool = false
+
+    var color: Color { Color(hex: colorHex) }
 }
 
 // MARK: - Board
@@ -238,6 +305,7 @@ struct Board: Identifiable, Codable, Hashable {
     var collaborators: [UUID] = []
     var items: [CanvasItem] = []
     var ropes: [RopeConnection] = []
+    var strokes: [DrawnStroke] = []
     /// Drives the bento rhythm in the gallery.
     var tileWeight: TileWeight = .standard
 

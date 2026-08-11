@@ -35,7 +35,6 @@ struct AvatarView: View {
                 Text(initials)
                     .font(.system(size: size * 0.36, weight: .bold))
                     .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
             }
         }
         .frame(width: size, height: size)

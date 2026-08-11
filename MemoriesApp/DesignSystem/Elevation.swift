@@ -1,8 +1,12 @@
 import SwiftUI
 
-// Depth is the core of this system. Four levels, four distinct shadow
-// signatures — a viewer should be able to tell what level a thing is on
-// without reading its content.
+// Depth comes from **object** shadows only.
+//
+// Paper, photos, notes and cards cast shadows because they are things lying on a
+// surface — that is the design. Foreground chrome does not: no glows on buttons,
+// no shadows behind icons or text, no halo on vector decorations. A glow on a
+// control is decoration pretending to be depth, and it costs an offscreen render
+// pass per frame to draw.
 //
 // The shadow *colours* come from `Palette` so they adapt with the theme: the
 // same 70%-black that reads as depth on a black board reads as grime on a white
@@ -27,15 +31,5 @@ extension View {
     /// makes stickers read as *stuck on* rather than *printed in*.
     func stickerShadow() -> some View {
         self.shadow(color: Palette.shadowSticker, radius: 0, x: 2, y: 2)
-    }
-
-    /// Emissive halo for active/live elements. Never decorative — it means
-    /// "this is on".
-    func neonGlow(radius: CGFloat = 16, opacity: Double = 0.35) -> some View {
-        self.shadow(color: Palette.neon.opacity(opacity), radius: radius)
-    }
-
-    func pinkGlow(radius: CGFloat = 16, opacity: Double = 0.35) -> some View {
-        self.shadow(color: Palette.pink.opacity(opacity), radius: radius)
     }
 }

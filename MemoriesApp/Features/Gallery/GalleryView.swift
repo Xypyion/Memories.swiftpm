@@ -15,6 +15,8 @@ struct GalleryView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.unit * 5) {
+                    ScrollOffsetReporter()
+
                     header(isWide: geo.size.width > 820)
 
                     if let hero = store.boards.first {
@@ -36,6 +38,7 @@ struct GalleryView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollIndicators(.hidden)
+            .tracksScrollOffset()
             .background(Palette.void)
         }
     }

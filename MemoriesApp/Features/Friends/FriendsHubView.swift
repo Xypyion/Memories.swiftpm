@@ -25,6 +25,8 @@ struct FriendsHubView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.unit * 5) {
+                    ScrollOffsetReporter()
+
                     header
                     searchField
 
@@ -60,6 +62,7 @@ struct FriendsHubView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollIndicators(.hidden)
+            .tracksScrollOffset()
             .background(Palette.void)
         }
         .toast($toast)
@@ -241,7 +244,7 @@ struct FriendsHubView: View {
     @ViewBuilder
     private var activeNow: some View {
         VStack(alignment: .leading, spacing: Space.unit * 2) {
-            SectionHeader("Active now", accessory: "circle.fill")
+            SectionHeader("Active now")
 
             if activeFriends.isEmpty {
                 Text("Nobody's on right now.")

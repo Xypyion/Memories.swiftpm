@@ -26,6 +26,8 @@ struct MemoriesView: View {
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: Space.unit * 4, pinnedViews: []) {
+                    ScrollOffsetReporter()
+
                     header(isWide: geo.size.width > 820)
                     controls
 
@@ -54,6 +56,7 @@ struct MemoriesView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollIndicators(.hidden)
+            .tracksScrollOffset()
             .background(Palette.void)
         }
     }

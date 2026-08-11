@@ -27,17 +27,9 @@ struct NeonButton: View {
                     .fill(Palette.neon)
                     .overlay {
                         Capsule(style: .continuous)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [.white.opacity(0.55), .clear],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                ),
-                                lineWidth: 1.5
-                            )
+                            .strokeBorder(Color.white.opacity(0.4), lineWidth: 1.5)
                     }
             }
-            .neonGlow(radius: 14, opacity: 0.30)
         }
         .buttonStyle(PressableButtonStyle())
     }
@@ -57,9 +49,9 @@ struct GlassIconButton: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: size * 0.42, weight: .medium))
-                .foregroundStyle(isActive ? Palette.neon : Palette.onSurfaceVariant)
+                .foregroundStyle(isActive ? Palette.accent : Palette.onSurfaceVariant)
                 .frame(width: size, height: size)
-                .liquidGlass(Circle(), tint: isActive ? 0.10 : 0.04, shadowRadius: 12)
+                .liquidGlass(Circle(), tint: isActive ? 0.10 : 0.04)
                 .overlay(alignment: .topTrailing) {
                     if badge {
                         Circle()
@@ -84,20 +76,17 @@ struct PressableButtonStyle: ButtonStyle {
 }
 
 /// Section heading with the optional trailing action used across every screen.
+///
+/// No leading icon. A glyph beside a heading that already says "Active now"
+/// tells the reader nothing the words did not, and a page full of them turns
+/// every heading into a row of decoration to scan past.
 struct SectionHeader<Trailing: View>: View {
 
     let title: String
-    var accessory: String? = nil
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            if let accessory {
-                Image(systemName: accessory)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Palette.accent)
-            }
-
             Text(title)
                 .textStyle(TypeScale.headline)
                 .foregroundStyle(Palette.onSurface)
@@ -110,8 +99,8 @@ struct SectionHeader<Trailing: View>: View {
 }
 
 extension SectionHeader where Trailing == EmptyView {
-    init(_ title: String, accessory: String? = nil) {
-        self.init(title: title, accessory: accessory) { EmptyView() }
+    init(_ title: String) {
+        self.init(title: title) { EmptyView() }
     }
 }
 

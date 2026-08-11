@@ -57,11 +57,7 @@ struct OnboardingOverlay: View {
         }
         .padding(28)
         .frame(maxWidth: 460)
-        .liquidGlass(
-            RoundedRectangle(cornerRadius: Radius.panel, style: .continuous),
-            tint: 0.07,
-            shadowRadius: 40
-        )
+        .solidGlass(RoundedRectangle(cornerRadius: Radius.panel, style: .continuous))
     }
 
     private var header: some View {

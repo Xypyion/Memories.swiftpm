@@ -22,6 +22,8 @@ struct MyProfileView: View {
 
             ScrollView {
                 VStack(spacing: Space.unit * 4) {
+                    ScrollOffsetReporter()
+
                     if let user = account.account {
                         ProfileHeader(
                             displayName: user.displayName,
@@ -64,6 +66,7 @@ struct MyProfileView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollIndicators(.hidden)
+            .tracksScrollOffset()
             .background {
                 ZStack {
                     Palette.void

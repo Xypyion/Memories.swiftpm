@@ -11,6 +11,7 @@ struct RootView: View {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
 
     @State private var showsSettings = false
+    @State private var scrollOffset: CGFloat = 0
 
     /// One policy combining the system setting with the app's own override, so
     /// no view has to consult two sources to decide whether to animate.
@@ -43,24 +44,36 @@ struct RootView: View {
             content
                 .ignoresSafeArea(.container, edges: .bottom)
 
-            // The board editor brings its own header; a second floating bar on
-            // top of it would be noise, and the canvas needs the room.
+            // The board editor brings its own header, and the canvas needs the
+            // room. Everywhere else the two controls float on top.
             if !isEditingBoard {
                 VStack {
-                    TopBar(
+                    FloatingTopControls(
                         account: account.account,
+                        isVisible: showsTopControls,
                         onOpenProfile: { store.tab = .profile },
                         onOpenSettings: { showsSettings = true }
                     )
                     Spacer()
                 }
-                .transition(.move(edge: .top).combined(with: .opacity))
             }
 
             LiquidGlassTabBar(
                 selection: $store.tab,
                 badges: store.invites.isEmpty ? [] : [.friends]
             )
+        }
+        // The dock is chrome anchored to the screen, not to the text field. Left
+        // to itself SwiftUI lifts it on top of the keyboard, where it covers the
+        // very thing you are typing into.
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .onPreferenceChange(ScrollOffsetKey.self) { offset in
+            scrollOffset = offset
+        }
+        .onChange(of: store.tab) { _, _ in
+            // A new tab starts at its own top; don't inherit the last one's
+            // scroll position for the purposes of hiding chrome.
+            scrollOffset = 0
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: store.tab)
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: isEditingBoard)
@@ -76,6 +89,12 @@ struct RootView: View {
                 .zIndex(100)
             }
         }
+    }
+
+    /// A small dead zone so a rubber-band bounce at the top doesn't flicker the
+    /// controls in and out.
+    private var showsTopControls: Bool {
+        scrollOffset > -24
     }
 
     private var isEditingBoard: Bool {
