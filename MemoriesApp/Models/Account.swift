@@ -59,11 +59,33 @@ final class AccountStore: ObservableObject {
     private static let onboardingKey = "memories.onboarding.completed.v1"
 
     init() {
-        hasCompletedOnboarding = UserDefaults.standard.bool(forKey: AccountStore.onboardingKey)
+        let onboarded = UserDefaults.standard.bool(forKey: AccountStore.onboardingKey)
+        hasCompletedOnboarding = onboarded
 
-        if let data = UserDefaults.standard.data(forKey: AccountStore.accountKey),
-           let restored = try? JSONDecoder().decode(UserAccount.self, from: data) {
-            account = restored
+        var restored: UserAccount?
+        if let data = UserDefaults.standard.data(forKey: AccountStore.accountKey) {
+            restored = try? JSONDecoder().decode(UserAccount.self, from: data)
+        }
+
+        account = restored
+
+        // A genuine first launch: nothing stored, nobody onboarded.
+        let isFirstRun = restored == nil && !onboarded
+
+        // A first-time visitor should land on a board, not on a form. The login
+        // screen verifies nothing anyway, so gating the product behind it buys
+        // nothing and costs the entire first impression. It stays reachable —
+        // signing out returns to it — it is just no longer the front door.
+        //
+        // Strictly first-run: someone who has signed out has *asked* for the
+        // login screen, and minting them a new guest session on next launch
+        // would take it away from them again.
+        //
+        // Done here rather than in a view's `onAppear` so the login screen is
+        // never rendered at all, not even for one frame.
+        if isFirstRun {
+            account = .guest()
+            persist()
         }
     }
 
@@ -144,13 +166,41 @@ final class AccountStore: ObservableObject {
     /// Exposed so Settings can offer "replay the tutorial".
     func resetOnboarding() {
         hasCompletedOnboarding = false
+        coachStep = .drag
         UserDefaults.standard.set(false, forKey: AccountStore.onboardingKey)
+    }
+
+    // MARK: Coaching
+    //
+    // The tutorial is not a slideshow to read, it is two gestures to perform.
+    // The canvas reports what the user actually did and the coach moves on, so
+    // the only way to finish it is to have already learned the thing.
+
+    @Published private(set) var coachStep: CoachStep = .drag
+
+    /// Called when an item has been dragged and set down.
+    func noteCoachDrag() {
+        guard !hasCompletedOnboarding, coachStep == .drag else { return }
+        coachStep = .tie
+    }
+
+    /// Called when two memories have been tied together.
+    func noteCoachTie() {
+        guard !hasCompletedOnboarding, coachStep == .tie else { return }
+        coachStep = .done
     }
 
     private func persist() {
         guard let account, let data = try? JSONEncoder().encode(account) else { return }
         UserDefaults.standard.set(data, forKey: AccountStore.accountKey)
     }
+}
+
+/// Where the user is in the two-gesture tutorial.
+enum CoachStep {
+    case drag
+    case tie
+    case done
 }
 
 /// Input rules, kept out of the views so the login screen and the profile editor

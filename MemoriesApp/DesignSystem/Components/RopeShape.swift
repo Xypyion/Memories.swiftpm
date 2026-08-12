@@ -24,16 +24,22 @@ struct RopeStrand: Shape {
     /// Phase offset — pass `.pi` for the opposing strand.
     var phase: CGFloat = 0
 
-    var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
+    /// `sag` rides along with the endpoints so a rope can animate from slack to
+    /// taut when it is first tied, instead of snapping to its final curve.
+    var animatableData: AnimatablePair<AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>>, CGFloat> {
         get {
             AnimatablePair(
-                AnimatablePair(from.x, from.y),
-                AnimatablePair(to.x, to.y)
+                AnimatablePair(
+                    AnimatablePair(from.x, from.y),
+                    AnimatablePair(to.x, to.y)
+                ),
+                sag
             )
         }
         set {
-            from = CGPoint(x: newValue.first.first, y: newValue.first.second)
-            to = CGPoint(x: newValue.second.first, y: newValue.second.second)
+            from = CGPoint(x: newValue.first.first.first, y: newValue.first.first.second)
+            to = CGPoint(x: newValue.first.second.first, y: newValue.first.second.second)
+            sag = newValue.second
         }
     }
 

@@ -17,6 +17,9 @@ struct RopeLayer: View {
     let ropes: [RopeConnection]
     let positions: [UUID: CGPoint]
     let canvasSize: CGSize
+    /// The rope tied a moment ago, if any. It is the one that plays the
+    /// slack-to-taut animation; every other rope draws at its stored sag.
+    var justTiedID: UUID?
 
     @ObservedObject var live: CanvasLiveState
 
@@ -29,6 +32,10 @@ struct RopeLayer: View {
                         from: live.resolvedPosition(of: rope.a, base: a),
                         to: live.resolvedPosition(of: rope.b, base: b)
                     )
+                    // Cutting removes the rope from the model immediately, so
+                    // the fade is what makes it read as a deliberate sever
+                    // rather than a glitch.
+                    .transition(.opacity)
                 }
             }
         }
@@ -40,9 +47,44 @@ struct RopeLayer: View {
     private func connection(_ rope: RopeConnection, from: CGPoint, to: CGPoint) -> some View {
         switch rope.resolvedStyle {
         case .twine:
-            RopeView(from: from, to: to, sag: rope.sag)
+            TwineConnection(rope: rope, from: from, to: to, playsTieAnimation: rope.id == justTiedID)
         case .arrow:
             ArrowConnector(from: from, to: to)
         }
+    }
+}
+
+/// A single twine rope, with the signature "just tied" moment.
+///
+/// A freshly tied rope enters slack and springs taut. Every other rope renders
+/// at its stored sag with no animation at all, so opening a board with existing
+/// connections does not set the whole canvas swinging.
+private struct TwineConnection: View {
+
+    let rope: RopeConnection
+    let from: CGPoint
+    let to: CGPoint
+    let playsTieAnimation: Bool
+
+    @Environment(\.motionPolicy) private var motion
+
+    /// Extra sag on top of the rope's stored value. Starts positive on a freshly
+    /// tied rope and springs to zero.
+    @State private var extraSag: CGFloat
+
+    init(rope: RopeConnection, from: CGPoint, to: CGPoint, playsTieAnimation: Bool) {
+        self.rope = rope
+        self.from = from
+        self.to = to
+        self.playsTieAnimation = playsTieAnimation
+        _extraSag = State(initialValue: playsTieAnimation ? rope.sag * 1.7 : 0)
+    }
+
+    var body: some View {
+        RopeView(from: from, to: to, sag: rope.sag + extraSag)
+            .onAppear {
+                guard extraSag != 0 else { return }
+                withAnimation(motion.animation(Motion.pop)) { extraSag = 0 }
+            }
     }
 }

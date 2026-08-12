@@ -15,6 +15,7 @@ struct BoardEditorView: View {
 
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var preferences: Preferences
+    @EnvironmentObject private var account: AccountStore
     @Environment(\.motionPolicy) private var motion
 
     /// Named so item drags can report translation in board coordinates rather
@@ -35,6 +36,22 @@ struct BoardEditorView: View {
     @State private var connectionAnchor: UUID?
     @State private var inspecting: EditingTarget?
     @State private var pasteAnchor: PasteAnchor?
+
+    /// The tie that just happened: the rope that should spring taut, and the two
+    /// items that should pulse. Cleared shortly after, so the moment is a moment.
+    @State private var justTiedRope: UUID?
+    @State private var justTiedItems: Set<UUID> = []
+
+    /// Object-level undo. `Board` is a value type, so a step backwards is just a
+    /// copy kept from before the edit — no command objects, no inverse
+    /// operations to get wrong.
+    ///
+    /// Snapshots are taken **only on commit**: a grab, an insert, a delete, a
+    /// tie or a cut. Never per drag frame, which would push 120 copies a second
+    /// and undo one pixel at a time.
+    @State private var undoStack: [Board] = []
+
+    private static let undoLimit = 20
 
     // Drawing. `nil` means the pen is away.
     @State private var drawing: DrawingTool?
@@ -134,6 +151,7 @@ struct BoardEditorView: View {
             }
         }
         .animation(motion.animation(.spring(response: 0.35, dampingFraction: 0.85)), value: isDrawing)
+        .animation(motion.animation(.spring(response: 0.3, dampingFraction: 0.8)), value: undoStack.isEmpty)
         .toast($toast)
         .photosPicker(isPresented: $showsPhotoPicker, selection: $photoPickerItem, matching: .images)
         .onChange(of: photoPickerItem) { _, newValue in
@@ -222,6 +240,7 @@ struct BoardEditorView: View {
                 ropes: board.ropes,
                 positions: itemPositions,
                 canvasSize: canvasSize,
+                justTiedID: justTiedRope,
                 live: live
             )
 
@@ -233,11 +252,14 @@ struct BoardEditorView: View {
                     isSelected: selection == item.id,
                     isConnectionAnchor: connectionAnchor == item.id,
                     isConnectionArmed: armedConnection != nil,
+                    isJustTied: justTiedItems.contains(item.id),
                     live: live,
                     onSelect: { handleTap(on: item.id) },
                     onActivate: { inspecting = EditingTarget(id: item.id) },
                     onCommit: { store.touch(boardID: boardID) },
-                    onDelete: { delete(itemID: item.id) }
+                    onDelete: { delete(itemID: item.id) },
+                    onGrab: { snapshotForUndo() },
+                    onDragEnded: { account.noteCoachDrag() }
                 )
                 .position(item.position)
                 // The selected item floats above the stack. Driven by
@@ -329,7 +351,10 @@ struct BoardEditorView: View {
             if store.collaborators(for: board).contains(where: { $0.isActive }) {
                 HStack(spacing: 7) {
                     OnlineStatus(presence: .online, size: 7, surround: .clear)
-                    Text("ON THE BOARD")
+                    // "(demo)" because there is no networking: this presence is
+                    // seeded, and the most visible simulated thing in the app
+                    // should be the one that admits it first.
+                    Text("ON THE BOARD (DEMO)")
                         .textStyle(TypeScale.labelTiny)
                         .foregroundStyle(Palette.accent)
                 }
@@ -342,6 +367,14 @@ struct BoardEditorView: View {
 
     private var actions: some View {
         HStack(spacing: isNarrowHeader ? 6 : 10) {
+            // Only present once there is something to take back, so a fresh
+            // board isn't carrying a permanently dead control.
+            if !undoStack.isEmpty {
+                GlassIconButton(icon: "arrow.uturn.backward", size: 40, action: undo)
+                    .accessibilityLabel("Undo")
+                    .transition(.scale.combined(with: .opacity))
+            }
+
             if !isNarrowHeader {
                 GlassIconButton(icon: "arrow.counterclockwise", size: 40, action: resetView)
                     .accessibilityLabel("Reset view")
@@ -550,6 +583,37 @@ struct BoardEditorView: View {
         .transition(.scale(scale: 0.9).combined(with: .opacity))
     }
 
+    // MARK: Undo
+
+    /// Call immediately *before* a committed object mutation.
+    private func snapshotForUndo() {
+        guard let current = store.board(id: boardID) else { return }
+        undoStack.append(current)
+        if undoStack.count > BoardEditorView.undoLimit {
+            undoStack.removeFirst()
+        }
+    }
+
+    private func undo() {
+        guard
+            let previous = undoStack.popLast(),
+            let index = store.boards.firstIndex(where: { $0.id == boardID })
+        else { return }
+
+        Haptics.place()
+
+        withAnimation(motion.animation(.spring(response: 0.4, dampingFraction: 0.8))) {
+            // Objects and connections only. Strokes have their own undo in the
+            // drawing toolbar, and restoring them here would let one Undo button
+            // silently erase work the other one owns.
+            store.boards[index].items = previous.items
+            store.boards[index].ropes = previous.ropes
+            store.boards[index].updatedAt = Date()
+            selection = nil
+            connectionAnchor = nil
+        }
+    }
+
     // MARK: Actions
 
     private func resetView() {
@@ -576,6 +640,7 @@ struct BoardEditorView: View {
 
         guard let anchor = connectionAnchor else {
             connectionAnchor = itemID
+            Haptics.select()
             return
         }
 
@@ -594,6 +659,9 @@ struct BoardEditorView: View {
     /// both directions — no separate delete affordance for a decorative object.
     private func connectOrDisconnect(_ a: UUID, _ b: UUID) {
         let style = armedConnection ?? .twine
+        var tiedRope: RopeConnection?
+
+        snapshotForUndo()
 
         withBoard { board in
             let existing = board.ropes.firstIndex {
@@ -602,8 +670,28 @@ struct BoardEditorView: View {
 
             if let existing {
                 board.ropes.remove(at: existing)
+                Haptics.cut()
             } else {
-                board.ropes.append(RopeConnection(a: a, b: b, style: style))
+                let rope = RopeConnection(a: a, b: b, style: style)
+                board.ropes.append(rope)
+                tiedRope = rope
+                Haptics.tie()
+            }
+        }
+
+        guard let tiedRope else { return }
+
+        justTiedRope = tiedRope.id
+        justTiedItems = [a, b]
+        account.noteCoachTie()
+
+        // The tie is a moment, not a state: the rope keeps its taut shape but
+        // the two items stop glowing shortly after.
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 650_000_000)
+            justTiedRope = nil
+            withAnimation(motion.animation(.easeOut(duration: 0.25))) {
+                justTiedItems = []
             }
         }
     }
@@ -630,10 +718,12 @@ struct BoardEditorView: View {
     }
 
     private func delete(itemID: UUID) {
-        if let item = board.items.first(where: { $0.id == itemID }),
-           let name = item.kind.photo?.imageName {
-            ImageStore.delete(named: name)
-        }
+        // The imported JPEG is deliberately left on disk. Undo restores the
+        // item, and an item pointing at a file we already deleted would come
+        // back as a blank frame — a visibly broken undo is worse than an
+        // orphaned file. Deleting the whole board still purges its images.
+        Haptics.delete()
+        snapshotForUndo()
 
         withAnimation(motion.animation(.spring(response: 0.35, dampingFraction: 0.75))) {
             withBoard { board in
@@ -666,6 +756,8 @@ struct BoardEditorView: View {
         openInspector: Bool = false
     ) {
         guard let boardIndex = store.boards.firstIndex(where: { $0.id == boardID }) else { return }
+
+        snapshotForUndo()
 
         var rng = SeededGenerator(seed: store.boards[boardIndex].items.count &* 7919 &+ Int(zoom * 1000))
         let center = point ?? viewportCenter
