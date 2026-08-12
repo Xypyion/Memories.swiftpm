@@ -175,10 +175,12 @@ struct SettingsView: View {
                 }
             }
             .pickerStyle(.segmented)
+
+            Toggle("Snap to grid", isOn: $preferences.snapToGrid)
         } header: {
             Text("Board")
         } footer: {
-            Text("The surface your memories sit on. Also switchable from a board's own menu.")
+            Text("The surface your memories sit on. Also switchable from a board's own menu. Snapping lines objects up on release and drops new ones straight — turn it off for a free-form, hand-placed board.")
         }
     }
 

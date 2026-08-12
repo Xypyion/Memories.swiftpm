@@ -253,6 +253,7 @@ struct BoardEditorView: View {
                     isConnectionAnchor: connectionAnchor == item.id,
                     isConnectionArmed: armedConnection != nil,
                     isJustTied: justTiedItems.contains(item.id),
+                    snapsToGrid: preferences.snapToGrid,
                     live: live,
                     onSelect: { handleTap(on: item.id) },
                     onActivate: { inspecting = EditingTarget(id: item.id) },
@@ -394,6 +395,10 @@ struct BoardEditorView: View {
                     }
                 }
 
+                Toggle(isOn: $preferences.snapToGrid) {
+                    Label("Snap to grid", systemImage: "square.grid.2x2")
+                }
+
                 if isNarrowHeader {
                     Button {
                         resetView()
@@ -461,7 +466,7 @@ struct BoardEditorView: View {
 
     private func canvasGesture(in size: CGSize) -> some Gesture {
         if isDrawing {
-            return AnyGesture(drawGesture.map { _ in () })
+            return AnyGesture(drawGesture(in: size).map { _ in () })
         }
         return AnyGesture(
             panGesture.simultaneously(with: zoomGesture(in: size)).map { _ in () }
@@ -513,25 +518,39 @@ struct BoardEditorView: View {
             }
     }
 
-    private var drawGesture: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named(BoardEditorView.canvasSpace))
+    /// Ink lands under the finger at any zoom or pan.
+    ///
+    /// This used to read `value.location` in the named canvas space. That space
+    /// is declared *underneath* `.scaleEffect(zoom)` and `.offset(pan)`, and
+    /// converting a point down through a `scaleEffect` does not reliably undo
+    /// the scale — so the stroke drifted further from the finger the further you
+    /// drew from the centre of the board, and drifted more the further you were
+    /// zoomed out.
+    ///
+    /// Reading the raw touch in `.local` and inverting the transform by hand is
+    /// arithmetic we control. It is the same conversion the long-press menu
+    /// already uses to place things where you pressed.
+    private func drawGesture(in size: CGSize) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .local)
             .onChanged { value in
                 guard let tool = drawing else { return }
 
+                let point = canvasPoint(fromScreen: value.location, in: size)
+
                 if tool.mode == .eraser {
-                    erase(at: value.location)
+                    erase(at: point)
                     return
                 }
 
                 if liveStroke == nil {
                     liveStroke = DrawnStroke(
-                        points: [value.startLocation],
+                        points: [canvasPoint(fromScreen: value.startLocation, in: size)],
                         colorHex: tool.colorHex,
                         width: tool.width,
                         isHighlighter: tool.mode == .highlighter
                     )
                 }
-                liveStroke?.points.append(value.location)
+                liveStroke?.points.append(point)
             }
             .onEnded { _ in
                 // One store write for the whole stroke, exactly as with drags.
@@ -763,13 +782,18 @@ struct BoardEditorView: View {
         let center = point ?? viewportCenter
         let jitter: CGFloat = point == nil ? 80 : 0
 
+        let dropPoint = CGPoint(
+            x: center.x + (jitter == 0 ? 0 : CGFloat.random(in: -jitter ... jitter, using: &rng)),
+            y: center.y + (jitter == 0 ? 0 : CGFloat.random(in: -jitter ... jitter, using: &rng))
+        )
+
+        // In snap mode the scatter is the wrong instinct: a new object should
+        // land squarely on the grid and sit straight, or the board stays messy
+        // no matter how carefully you place things afterwards.
         var item = CanvasItem(
             kind: kind,
-            position: CGPoint(
-                x: center.x + (jitter == 0 ? 0 : CGFloat.random(in: -jitter ... jitter, using: &rng)),
-                y: center.y + (jitter == 0 ? 0 : CGFloat.random(in: -jitter ... jitter, using: &rng))
-            ),
-            rotation: Double.random(in: -5 ... 5, using: &rng),
+            position: preferences.snapToGrid ? CanvasGrid.snap(dropPoint) : dropPoint,
+            rotation: preferences.snapToGrid ? 0 : Double.random(in: -5 ... 5, using: &rng),
             zIndex: store.boards[boardIndex].topZIndex,
             seed: Int.random(in: 0 ..< 100_000, using: &rng),
             width: width
@@ -870,7 +894,7 @@ struct CanvasBackdrop: View {
                 break
 
             case .dots:
-                let step: CGFloat = 64
+                let step = CanvasGrid.step
                 var y: CGFloat = 0
                 while y < size.height {
                     var x: CGFloat = 0
@@ -885,7 +909,7 @@ struct CanvasBackdrop: View {
                 }
 
             case .lines:
-                let step: CGFloat = 64
+                let step = CanvasGrid.step
                 var path = Path()
                 var x: CGFloat = 0
                 while x < size.width {

@@ -60,7 +60,7 @@ struct BoardCollage: View {
                     .frame(width: layout.size.width, height: layout.size.height)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.eight, style: .continuous))
                     .rotationEffect(.degrees(layout.rotation))
-                    .shadow(color: .black.opacity(0.6), radius: 12, y: 6)
+                    .shadow(color: Palette.shadowHeavy, radius: 12, y: 6)
                     .offset(x: layout.offset.width, y: layout.offset.height)
                     .zIndex(Double(index))
             }

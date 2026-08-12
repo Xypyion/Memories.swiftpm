@@ -24,6 +24,9 @@ struct CanvasItemView: View {
     var isConnectionArmed: Bool
     /// True for the brief moment after this item was tied to another one.
     var isJustTied: Bool
+    /// `true` when the board is in snap-to-grid mode. Applied on release only —
+    /// snapping mid-gesture would fight the finger.
+    var snapsToGrid: Bool
 
     /// Held as a plain reference, not `@ObservedObject` — this view drives it
     /// but must not re-render from it.
@@ -182,10 +185,11 @@ struct CanvasItemView: View {
             }
             .onEnded { value in
                 // The single store write for the whole gesture.
-                item.position = CGPoint(
+                let dropped = CGPoint(
                     x: item.position.x + value.translation.width,
                     y: item.position.y + value.translation.height
                 )
+                item.position = snapsToGrid ? CanvasGrid.snap(dropped) : dropped
                 dragTranslation = .zero
                 isDragging = false
                 live.end()
