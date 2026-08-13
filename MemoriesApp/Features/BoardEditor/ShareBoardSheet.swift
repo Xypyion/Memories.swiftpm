@@ -112,7 +112,9 @@ struct ShareBoardSheet: View {
 
     private var linkCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionHeader("Invite link")
+            SectionHeader(title: "Invite link") {
+                StickerBadge(text: "Demo", style: .paper, rotation: 0, shape: .pill)
+            }
 
             HStack(spacing: 12) {
                 Text(inviteLink)
@@ -137,9 +139,12 @@ struct ShareBoardSheet: View {
             .padding(16)
             .glassPanel(cornerRadius: Radius.card)
 
-            Text("Anyone with this link can add memories to the board.")
+            // Shipping a convincing fake of a network feature is worse than
+            // shipping neither, so the link says what it actually is.
+            Text("The link copies to your clipboard and resolves to nothing — the app has no server yet. This is the shape a real invite would take.")
                 .textStyle(TypeScale.bodySM)
                 .foregroundStyle(Palette.onSurfaceVariant.opacity(0.8))
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

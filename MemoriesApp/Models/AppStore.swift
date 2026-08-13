@@ -15,8 +15,8 @@ final class AppStore: ObservableObject {
     @Published var activity: [ActivityEvent]
     @Published var profile: UserProfile
 
-    // Navigation state. Deliberately not persisted — the app should always open
-    // on the gallery.
+    // Navigation state. Deliberately not persisted — a returning user always
+    // opens on the gallery, never on whatever they happened to close.
     @Published var tab: AppTab = .board
     @Published var openBoardID: UUID?
 
@@ -38,6 +38,15 @@ final class AppStore: ObservableObject {
             invites = seeded.invites
             activity = seeded.activity
             profile = seeded.profile
+
+            // Nothing saved means nobody has been here before, so open straight
+            // onto the richest board. A first launch that lands on a populated
+            // canvas explains the product in one screen; the gallery does not.
+            //
+            // Only in this branch: a returning user has saved state and keeps
+            // the gallery. Board IDs are minted fresh inside `make()` every
+            // run, so the showcase is resolved by title, never by a fixed UUID.
+            openBoardID = AppStore.showcaseBoard(in: boards)?.id
         }
 
         objectWillChange
@@ -47,6 +56,11 @@ final class AppStore: ObservableObject {
     }
 
     // MARK: Lookups
+
+    /// The board a cold visitor should be shown: the one with the most on it.
+    static func showcaseBoard(in boards: [Board]) -> Board? {
+        boards.first { $0.title == "Roadtrip Chaos" } ?? boards.first
+    }
 
     func board(id: UUID) -> Board? {
         boards.first { $0.id == id }

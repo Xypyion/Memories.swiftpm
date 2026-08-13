@@ -24,16 +24,22 @@ struct RopeStrand: Shape {
     /// Phase offset — pass `.pi` for the opposing strand.
     var phase: CGFloat = 0
 
-    var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
+    /// `sag` rides along with the endpoints so a rope can animate from slack to
+    /// taut when it is first tied, instead of snapping to its final curve.
+    var animatableData: AnimatablePair<AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>>, CGFloat> {
         get {
             AnimatablePair(
-                AnimatablePair(from.x, from.y),
-                AnimatablePair(to.x, to.y)
+                AnimatablePair(
+                    AnimatablePair(from.x, from.y),
+                    AnimatablePair(to.x, to.y)
+                ),
+                sag
             )
         }
         set {
-            from = CGPoint(x: newValue.first.first, y: newValue.first.second)
-            to = CGPoint(x: newValue.second.first, y: newValue.second.second)
+            from = CGPoint(x: newValue.first.first.first, y: newValue.first.first.second)
+            to = CGPoint(x: newValue.first.second.first, y: newValue.first.second.second)
+            sag = newValue.second
         }
     }
 
@@ -108,8 +114,11 @@ struct RopeView: View {
 
     var body: some View {
         ZStack {
+            // The rope's cast shadow, not part of the rope itself — so it comes
+            // from the adaptive token. A 55%-black blur under every rope reads
+            // as depth on a black board and as a dirty smear on a white one.
             core
-                .stroke(Color.black.opacity(0.55), style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                .stroke(Palette.shadowSoft, style: StrokeStyle(lineWidth: 9, lineCap: .round))
                 .blur(radius: 5)
                 .offset(y: 5)
 
@@ -133,8 +142,10 @@ struct RopeView: View {
             Circle()
                 .fill(Color(hex: 0xB8A67F))
                 .frame(width: 11, height: 11)
+                // The keyline stays dark — it is the knot's own outline, part of
+                // the object. Only the cast shadow adapts.
                 .overlay(Circle().strokeBorder(Color.black.opacity(0.35), lineWidth: 1))
-                .shadow(color: .black.opacity(0.6), radius: 3, y: 2)
+                .shadow(color: Palette.shadowSoft, radius: 3, y: 2)
         }
     }
 }

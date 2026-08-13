@@ -35,6 +35,10 @@ struct RootView: View {
         }
         .environment(\.motionPolicy, motionPolicy)
         .animation(.spring(response: 0.45, dampingFraction: 0.86), value: account.isSignedIn)
+        .onAppear { Haptics.enabled = !motionPolicy.isReduced }
+        .onChange(of: motionPolicy.isReduced) { _, isReduced in
+            Haptics.enabled = !isReduced
+        }
     }
 
     // MARK: Signed in
@@ -80,12 +84,17 @@ struct RootView: View {
         .sheet(isPresented: $showsSettings) {
             SettingsView()
         }
-        .overlay {
-            if !account.hasCompletedOnboarding {
-                OnboardingOverlay {
-                    account.completeOnboarding()
+        // The coach teaches two canvas gestures, so it only appears over the
+        // canvas. Aligned to the top and clear of the board header, leaving the
+        // dock — the thing step two tells you to reach for — unobstructed.
+        .overlay(alignment: .top) {
+            if showsCoach {
+                OnboardingCoach(step: account.coachStep) {
+                    withAnimation(motionPolicy.animation(.easeOut(duration: 0.25))) {
+                        account.completeOnboarding()
+                    }
                 }
-                .transition(.opacity)
+                .padding(.top, Space.topBarClearance)
                 .zIndex(100)
             }
         }
@@ -99,6 +108,10 @@ struct RootView: View {
 
     private var isEditingBoard: Bool {
         store.tab == .board && store.openBoardID != nil
+    }
+
+    private var showsCoach: Bool {
+        !account.hasCompletedOnboarding && isEditingBoard
     }
 
     @ViewBuilder

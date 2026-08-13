@@ -11,6 +11,7 @@ final class Preferences: ObservableObject {
     @Published var themeMode: ThemeMode { didSet { save() } }
     @Published var reduceMotion: Bool { didSet { save() } }
     @Published var canvasGrid: CanvasGridStyle { didSet { save() } }
+    @Published var snapToGrid: Bool { didSet { save() } }
 
     @Published var notifyOnInvite: Bool { didSet { save() } }
     @Published var notifyOnActivity: Bool { didSet { save() } }
@@ -28,6 +29,7 @@ final class Preferences: ObservableObject {
         themeMode = stored?.themeMode ?? .system
         reduceMotion = stored?.reduceMotion ?? false
         canvasGrid = stored?.canvasGrid ?? .dots
+        snapToGrid = stored?.snapToGrid ?? false
         notifyOnInvite = stored?.notifyOnInvite ?? true
         notifyOnActivity = stored?.notifyOnActivity ?? true
         notifyOnReaction = stored?.notifyOnReaction ?? false
@@ -50,6 +52,7 @@ final class Preferences: ObservableObject {
         themeMode = .system
         reduceMotion = false
         canvasGrid = .dots
+        snapToGrid = false
         notifyOnInvite = true
         notifyOnActivity = true
         notifyOnReaction = false
@@ -66,6 +69,8 @@ final class Preferences: ObservableObject {
         /// Optional so a preferences blob written before the grid existed still
         /// decodes instead of resetting every other setting to its default.
         var canvasGrid: CanvasGridStyle?
+        /// Optional for the same reason.
+        var snapToGrid: Bool?
         var notifyOnInvite: Bool
         var notifyOnActivity: Bool
         var notifyOnReaction: Bool
@@ -85,6 +90,7 @@ final class Preferences: ObservableObject {
             themeMode: themeMode,
             reduceMotion: reduceMotion,
             canvasGrid: canvasGrid,
+            snapToGrid: snapToGrid,
             notifyOnInvite: notifyOnInvite,
             notifyOnActivity: notifyOnActivity,
             notifyOnReaction: notifyOnReaction,
@@ -116,6 +122,24 @@ enum ThemeMode: String, Codable, CaseIterable, Identifiable {
         case .light: "sun.max"
         case .dark: "moon.stars"
         }
+    }
+}
+
+/// The board's grid geometry.
+///
+/// One constant, shared by the thing that *draws* the grid and the thing that
+/// *snaps* to it — if those two ever disagreed, objects would land visibly off
+/// the dots they were supposed to sit on.
+enum CanvasGrid {
+
+    static let step: CGFloat = 64
+
+    /// Nearest grid intersection.
+    static func snap(_ point: CGPoint) -> CGPoint {
+        CGPoint(
+            x: (point.x / step).rounded() * step,
+            y: (point.y / step).rounded() * step
+        )
     }
 }
 
