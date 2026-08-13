@@ -162,9 +162,13 @@ struct CanvasItemView: View {
                     .frame(width: 28, height: 28)
                     .background(Circle().fill(Palette.pink))
                     .overlay(Circle().strokeBorder(Palette.ink, lineWidth: 2))
+                    // The badge stays 28pt — bigger would cover the memory it
+                    // belongs to — but the target around it is 44. The offset
+                    // absorbs the extra 8pt so the badge sits where it did.
+                    .minimumHitArea()
             }
             .buttonStyle(PressableButtonStyle())
-            .offset(x: 14, y: -14)
+            .offset(x: 22, y: -22)
             .accessibilityLabel("Delete \(item.kind.label)")
         }
     }

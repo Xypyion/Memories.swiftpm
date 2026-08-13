@@ -24,31 +24,37 @@ struct DrawingToolbar: View {
     }
 
     private var colorRow: some View {
-        HStack(spacing: 10) {
-            ForEach(DrawingTool.palette, id: \.self) { hex in
+        // No spacing of its own: each swatch carries a 44pt touch area, and the
+        // gap between the drawn circles is what is left over. Spacing on top of
+        // that would push eight inks wider than the panel holding them.
+        HStack(spacing: 0) {
+            ForEach(DrawingTool.palette) { ink in
+                let isSelected = tool.colorHex == ink.hex && tool.mode != .eraser
+
                 Button {
-                    tool.colorHex = hex
+                    tool.colorHex = ink.hex
                     if tool.mode == .eraser { tool.mode = .pen }
                 } label: {
                     Circle()
-                        .fill(Color(hex: hex))
+                        .fill(Color(hex: ink.hex))
                         .frame(width: 26, height: 26)
                         .overlay {
                             Circle().strokeBorder(Palette.hairlineBright, lineWidth: 1)
                         }
                         .overlay {
-                            if tool.colorHex == hex, tool.mode != .eraser {
+                            if isSelected {
                                 Circle()
                                     .strokeBorder(Palette.onSurface, lineWidth: 2)
                                     .padding(-4)
                             }
                         }
+                        .minimumHitArea()
                 }
                 .buttonStyle(PressableButtonStyle())
-                .accessibilityLabel(Color(hex: hex).description)
+                .accessibilityLabel(ink.name)
+                .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
             }
         }
-        .padding(.horizontal, 4)
     }
 
     private var controlRow: some View {
@@ -60,7 +66,7 @@ struct DrawingToolbar: View {
                     Image(systemName: mode.icon)
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(tool.mode == mode ? Palette.onNeon : Palette.onSurfaceVariant)
-                        .frame(width: 42, height: 38)
+                        .frame(width: 44, height: 44)
                         .background {
                             if tool.mode == mode {
                                 RoundedRectangle(cornerRadius: Radius.eight, style: .continuous)
@@ -83,7 +89,7 @@ struct DrawingToolbar: View {
                 Image(systemName: "arrow.uturn.backward")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(canUndo ? Palette.onSurfaceVariant : Palette.onSurfaceVariant.opacity(0.3))
-                    .frame(width: 36, height: 38)
+                    .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(PressableButtonStyle())
@@ -94,7 +100,7 @@ struct DrawingToolbar: View {
                 Image(systemName: "trash")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(canUndo ? Palette.pinkAccent : Palette.onSurfaceVariant.opacity(0.3))
-                    .frame(width: 36, height: 38)
+                    .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(PressableButtonStyle())

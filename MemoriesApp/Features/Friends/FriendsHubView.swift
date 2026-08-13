@@ -217,6 +217,7 @@ struct FriendsHubView: View {
                         .foregroundStyle(Palette.onNeon)
                         .frame(width: 34, height: 34)
                         .background(Circle().fill(Palette.neon))
+                        .minimumHitArea()
                 }
                 .buttonStyle(PressableButtonStyle())
                 .accessibilityLabel("Accept invite")
@@ -232,6 +233,7 @@ struct FriendsHubView: View {
                         .foregroundStyle(Palette.onSurfaceVariant)
                         .frame(width: 34, height: 34)
                         .background(Circle().fill(Palette.containerHigh))
+                        .minimumHitArea()
                 }
                 .buttonStyle(PressableButtonStyle())
                 .accessibilityLabel("Decline invite")

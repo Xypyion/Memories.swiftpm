@@ -122,17 +122,28 @@ struct DrawingTool: Equatable {
         mode == .highlighter ? highlighterWidth : penWidth
     }
 
+    /// One ink. The name is a stored field rather than a comment beside the hex,
+    /// because it is read aloud: VoiceOver announces the swatch by name, and a
+    /// name in a comment cannot be announced and drifts the first time somebody
+    /// reorders the list.
+    struct Ink: Identifiable, Equatable {
+        let hex: UInt32
+        let name: String
+
+        var id: UInt32 { hex }
+    }
+
     /// Ink options. Deliberately short — a wall of swatches is slower to use
     /// than eight good ones, and these are picked to read on both a black and a
     /// white board.
-    static let palette: [UInt32] = [
-        0xC8FF2E,  // neon
-        0xFF2E7E,  // pink
-        0xFFFFFF,  // white
-        0x111111,  // ink
-        0x36C5F0,  // sky
-        0xFFC53D,  // amber
-        0x9B7BFF,  // violet
-        0x3ED66B   // green
+    static let palette: [Ink] = [
+        Ink(hex: 0xC8FF2E, name: "Neon"),
+        Ink(hex: 0xFF2E7E, name: "Pink"),
+        Ink(hex: 0xFFFFFF, name: "White"),
+        Ink(hex: 0x111111, name: "Ink"),
+        Ink(hex: 0x36C5F0, name: "Sky"),
+        Ink(hex: 0xFFC53D, name: "Amber"),
+        Ink(hex: 0x9B7BFF, name: "Violet"),
+        Ink(hex: 0x3ED66B, name: "Green")
     ]
 }

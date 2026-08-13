@@ -449,7 +449,7 @@ struct BoardEditorView: View {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(Palette.onSurfaceVariant)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 44, height: 44)
                     .liquidGlass(Circle(), tint: 0.04)
             }
             .accessibilityLabel("Board options")
@@ -463,7 +463,7 @@ struct BoardEditorView: View {
                     Image(systemName: "square.and.arrow.up")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Palette.onNeon)
-                        .frame(width: 40, height: 40)
+                        .frame(width: 44, height: 44)
                         .background(Circle().fill(Palette.neon))
                         .contentShape(Circle())
                 }

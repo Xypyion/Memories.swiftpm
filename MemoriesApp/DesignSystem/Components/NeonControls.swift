@@ -70,6 +70,20 @@ struct GlassIconButton: View {
     }
 }
 
+extension View {
+    /// Guarantees a control the platform's 44pt minimum touch area without
+    /// changing what is drawn.
+    ///
+    /// The distinction matters on this canvas: a delete badge on a photo has to
+    /// stay small or it covers the photo, but a small *target* on a surface
+    /// where fingers are already imprecise is how you delete the wrong memory.
+    /// The artwork keeps its size and the reachable area grows around it.
+    func minimumHitArea(_ side: CGFloat = 44) -> some View {
+        frame(minWidth: side, minHeight: side)
+            .contentShape(Rectangle())
+    }
+}
+
 /// Every interactive element in this app compresses slightly on touch. It is
 /// the cheapest way to sell physicality, and it applies uniformly.
 struct PressableButtonStyle: ButtonStyle {
