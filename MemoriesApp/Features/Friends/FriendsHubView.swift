@@ -56,8 +56,8 @@ struct FriendsHubView: View {
                     }
                 }
                 .padding(.horizontal, geo.size.width > 700 ? Space.canvasMargin : Space.unit * 2.5)
-                .padding(.top, Space.topBarClearance)
-                .padding(.bottom, Space.dockClearance)
+                .topBarClearance()
+                .dockClearance()
                 .frame(maxWidth: 1440)
                 .frame(maxWidth: .infinity)
             }

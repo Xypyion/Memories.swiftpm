@@ -94,7 +94,7 @@ struct RootView: View {
                         account.completeOnboarding()
                     }
                 }
-                .padding(.top, Space.topBarClearance)
+                .topBarClearance()
                 .zIndex(100)
             }
         }

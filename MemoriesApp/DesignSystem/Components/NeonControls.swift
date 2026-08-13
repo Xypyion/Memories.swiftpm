@@ -18,6 +18,11 @@ struct NeonButton: View {
                 }
                 Text(title)
                     .textStyle(TypeScale.sticker)
+                    // A button label is a name, not prose. Breaking "Share" into
+                    // "Sh / are" to fit a squeezed row is never the right answer:
+                    // the label holds its width and the row gives ground.
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .foregroundStyle(Palette.onNeon)
             .padding(.horizontal, isCompact ? 16 : 24)
@@ -115,6 +120,8 @@ struct FilterChip: View {
         Button(action: action) {
             Text(title.uppercased())
                 .textStyle(TypeScale.labelCaps)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .foregroundStyle(isSelected ? Palette.onNeon : Palette.onSurfaceVariant)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 9)

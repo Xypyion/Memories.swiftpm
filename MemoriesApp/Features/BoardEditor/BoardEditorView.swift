@@ -17,6 +17,7 @@ struct BoardEditorView: View {
     @EnvironmentObject private var preferences: Preferences
     @EnvironmentObject private var account: AccountStore
     @Environment(\.motionPolicy) private var motion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     /// Named so item drags can report translation in board coordinates rather
     /// than screen coordinates.
@@ -85,8 +86,14 @@ struct BoardEditorView: View {
     /// iPad portrait is still a `.regular` size class, so laying the header out
     /// by size class left it overflowing in portrait — which is what made the
     /// Share button look wrong. Measured width is the honest signal.
+    ///
+    /// An accessibility text size counts as narrow for the same reason a
+    /// portrait iPad does: the row has run out of room. Reusing this one flag
+    /// means large text gets the layout that was already built and tested for
+    /// the cramped case — icon-only Share, no presence cluster, tighter gaps —
+    /// instead of a second set of rules that only large text ever exercises.
     private var isNarrowHeader: Bool {
-        headerWidth > 0 && headerWidth < 720
+        dynamicTypeSize.isAccessibilitySize || (headerWidth > 0 && headerWidth < 720)
     }
 
     private var isDrawing: Bool { drawing != nil }
@@ -133,7 +140,7 @@ struct BoardEditorView: View {
                         onClear: { withBoard { $0.strokes.removeAll() } },
                         onDone: { drawing = nil }
                     )
-                    .padding(.bottom, Space.dockClearance)
+                    .dockClearance()
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else {
                     CreationDock(
@@ -145,7 +152,7 @@ struct BoardEditorView: View {
                         onConnect: toggleConnection,
                         onDraw: { startDrawing() }
                     )
-                    .padding(.bottom, Space.dockClearance)
+                    .dockClearance()
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
@@ -297,6 +304,10 @@ struct BoardEditorView: View {
                             .textStyle(TypeScale.headline)
                             .foregroundStyle(Palette.accent)
                             .lineLimit(1)
+                            // Give back a fifth of the size before resorting to
+                            // an ellipsis — the board's name is the one thing in
+                            // this row the reader actually needs.
+                            .minimumScaleFactor(0.8)
                         Image(systemName: "pencil")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(Palette.accent.opacity(0.6))
@@ -358,6 +369,10 @@ struct BoardEditorView: View {
                     Text("ON THE BOARD (DEMO)")
                         .textStyle(TypeScale.labelTiny)
                         .foregroundStyle(Palette.accent)
+                        // Holds its width rather than being squeezed to "ON"
+                        // and clipped by the capsule around it.
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)

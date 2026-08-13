@@ -163,3 +163,48 @@ enum Space {
     /// Clearance the floating top bar needs at the top of every scroll view.
     static let topBarClearance: CGFloat = 76
 }
+
+/// Clearance for the floating chrome.
+///
+/// These are not ordinary padding. They are the room a scroll view leaves for a
+/// control that floats *over* it, which means the number has to track the size
+/// of that control — and the control contains text, so it grows with the
+/// reader's text size. A fixed 76pt was correct exactly once, at the default
+/// setting; one notch up and the profile pill started sitting on the first card.
+private struct TopBarClearance: ViewModifier {
+
+    /// Scaled on the profile pill's own ramp — `labelCaps` rides `.caption`.
+    @ScaledMetric(relativeTo: .caption) private var clearance: CGFloat = Space.topBarClearance
+
+    var extra: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content.padding(.top, clearance + extra)
+    }
+}
+
+private struct DockClearance: ViewModifier {
+
+    /// `labelTiny` rides `.caption2`.
+    @ScaledMetric(relativeTo: .caption2) private var clearance: CGFloat = Space.dockClearance
+
+    func body(content: Content) -> some View {
+        // The dock itself stops growing at the largest non-accessibility step,
+        // so the room reserved for it stops there too. Without the cap the
+        // accessibility sizes would push a hole into the bottom of every scroll
+        // view that no longer has a dock in it.
+        content.padding(.bottom, min(clearance, Space.dockClearance * 1.5))
+    }
+}
+
+extension View {
+    /// Leaves room for the floating profile pill and settings button.
+    func topBarClearance(extra: CGFloat = 0) -> some View {
+        modifier(TopBarClearance(extra: extra))
+    }
+
+    /// Leaves room for the floating dock.
+    func dockClearance() -> some View {
+        modifier(DockClearance())
+    }
+}

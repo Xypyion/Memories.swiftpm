@@ -50,8 +50,8 @@ struct MemoriesView: View {
                     }
                 }
                 .padding(.horizontal, horizontalPadding(for: geo.size.width))
-                .padding(.top, Space.topBarClearance)
-                .padding(.bottom, Space.dockClearance)
+                .topBarClearance()
+                .dockClearance()
                 .frame(maxWidth: 1440)
                 .frame(maxWidth: .infinity)
             }
