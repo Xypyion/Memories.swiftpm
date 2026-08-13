@@ -69,6 +69,12 @@ struct CanvasItemView: View {
 
     var body: some View {
         content
+            // An object on the board is artwork, not chrome. Its size is already
+            // under direct control — pinch it — and the caption is set inside a
+            // frame the user chose, so letting the accessibility text sizes
+            // through here would rearrange a board the user composed by hand.
+            // The inspector that edits this caption is chrome and scales fully.
+            .fixedLayoutTypeCeiling()
             .overlay { chrome }
             .overlay(alignment: .topTrailing) { deleteButton }
             .rotationEffect(.degrees(item.rotation + twistDegrees))

@@ -14,7 +14,7 @@ struct NeonButton: View {
             HStack(spacing: 7) {
                 if let icon {
                     Image(systemName: icon)
-                        .font(.system(size: 14, weight: .bold))
+                        .symbolStyle(TypeScale.sticker, size: 14, weight: .bold)
                 }
                 Text(title)
                     .textStyle(TypeScale.sticker)

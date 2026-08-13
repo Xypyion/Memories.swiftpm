@@ -20,7 +20,7 @@ struct StickerBadge: View {
         HStack(spacing: 5) {
             if let icon {
                 Image(systemName: icon)
-                    .font(.system(size: 13, weight: .bold))
+                    .symbolStyle(TypeScale.sticker, size: 13, weight: .bold)
             }
             Text(text.uppercased())
                 .textStyle(TypeScale.sticker)

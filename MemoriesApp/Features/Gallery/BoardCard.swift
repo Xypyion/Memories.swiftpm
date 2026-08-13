@@ -180,6 +180,11 @@ struct BoardCard: View {
                 .textStyle(isHero ? TypeScale.displayMD : TypeScale.headline)
                 .foregroundStyle(Palette.onScrim)
                 .lineLimit(2)
+                // The card is a fixed-height tile in the bento, so a scaled-up
+                // title has nowhere to go. Two lines, then shrink — a title that
+                // gives back a fifth of its size still reads, where one clipped
+                // by the tile's corner radius does not.
+                .minimumScaleFactor(0.8)
                 .multilineTextAlignment(.leading)
 
             Text("\(board.memoryCount) memories · \(RelativeTime.updatedString(for: board.updatedAt))")

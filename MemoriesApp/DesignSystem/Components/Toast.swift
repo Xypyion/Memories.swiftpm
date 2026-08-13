@@ -61,7 +61,7 @@ private struct ToastModifier: ViewModifier {
     private func banner(_ message: ToastMessage) -> some View {
         HStack(spacing: 10) {
             Image(systemName: message.tone.icon)
-                .font(.system(size: 15, weight: .semibold))
+                .symbolStyle(TypeScale.bodySM, size: 15, weight: .semibold)
                 .foregroundStyle(message.tone.tint)
 
             Text(message.text)
@@ -93,7 +93,7 @@ struct FieldError: View {
         if let text {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 11, weight: .semibold))
+                    .symbolStyle(TypeScale.bodySM, size: 11, weight: .semibold)
                 Text(text)
                     .textStyle(TypeScale.bodySM)
             }
