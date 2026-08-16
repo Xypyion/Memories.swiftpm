@@ -201,10 +201,24 @@ struct BoardCard: View {
 /// treating them as physical objects.
 struct LiftButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.985 : 1)
-            .offset(y: configuration.isPressed ? 2 : 0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
+        Lift(isPressed: configuration.isPressed, label: configuration.label)
+    }
+
+    /// Split out for the same reason as `PressableButtonStyle.Pressable`: a
+    /// `ButtonStyle` cannot observe the environment, and a view can.
+    private struct Lift: View {
+
+        let isPressed: Bool
+        let label: ButtonStyleConfiguration.Label
+
+        @Environment(\.motionPolicy) private var motion
+
+        var body: some View {
+            label
+                .scaleEffect(isPressed ? 0.985 : 1)
+                .offset(y: isPressed ? 2 : 0)
+                .animation(motion.animation(.spring(response: 0.3, dampingFraction: 0.7)), value: isPressed)
+        }
     }
 }
 

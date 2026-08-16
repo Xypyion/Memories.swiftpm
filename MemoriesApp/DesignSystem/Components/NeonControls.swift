@@ -88,9 +88,27 @@ extension View {
 /// the cheapest way to sell physicality, and it applies uniformly.
 struct PressableButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.94 : 1)
-            .animation(.spring(response: 0.24, dampingFraction: 0.6), value: configuration.isPressed)
+        Pressable(isPressed: configuration.isPressed, label: configuration.label)
+    }
+
+    /// A real `View`, not just the contents of `makeBody`.
+    ///
+    /// `@Environment` declared on a `ButtonStyle` is read once and never
+    /// updated — a style is not a view, so nothing re-invokes `makeBody` when
+    /// the value changes. Moving the body into a view is what lets the press
+    /// animation see `motionPolicy` at all, and see it change live.
+    private struct Pressable: View {
+
+        let isPressed: Bool
+        let label: ButtonStyleConfiguration.Label
+
+        @Environment(\.motionPolicy) private var motion
+
+        var body: some View {
+            label
+                .scaleEffect(isPressed ? 0.94 : 1)
+                .animation(motion.animation(.spring(response: 0.24, dampingFraction: 0.6)), value: isPressed)
+        }
     }
 }
 

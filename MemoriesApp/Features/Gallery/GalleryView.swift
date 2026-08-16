@@ -9,6 +9,8 @@ struct GalleryView: View {
 
     @EnvironmentObject private var store: AppStore
 
+    @Environment(\.motionPolicy) private var motion
+
     var body: some View {
         GeometryReader { geo in
             let columnCount = columnCount(for: geo.size.width)
@@ -110,7 +112,7 @@ struct GalleryView: View {
         case .create:
             CreateBoardCard(height: 300) {
                 let id = store.createBoard()
-                withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+                withAnimation(motion.animation(.spring(response: 0.42, dampingFraction: 0.85))) {
                     store.openBoardID = id
                 }
             }
@@ -168,7 +170,7 @@ struct GalleryView: View {
     }
 
     private func open(_ board: Board) {
-        withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+        withAnimation(motion.animation(.spring(response: 0.42, dampingFraction: 0.85))) {
             store.openBoardID = board.id
         }
     }

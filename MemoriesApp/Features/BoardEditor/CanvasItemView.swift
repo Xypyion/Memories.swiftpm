@@ -99,7 +99,7 @@ struct CanvasItemView: View {
             .onTapGesture { isSelected ? onActivate() : onSelect() }
             .gesture(dragGesture)
             .simultaneousGesture(transformGesture, including: isSelected ? .all : .subviews)
-            .animation(.spring(response: 0.3, dampingFraction: 0.75), value: isSelected)
+            .animation(motion.animation(.spring(response: 0.3, dampingFraction: 0.75)), value: isSelected)
             .animation(motion.animation(Motion.pop), value: isJustTied)
     }
 

@@ -424,7 +424,7 @@ struct BoardEditorView: View {
 
                 if !board.ropes.isEmpty {
                     Button {
-                        withAnimation { withBoard { $0.ropes.removeAll() } }
+                        withAnimation(motion.animation(.default)) { withBoard { $0.ropes.removeAll() } }
                     } label: {
                         Label("Remove all connections", systemImage: "link.badge.plus")
                     }
@@ -432,7 +432,7 @@ struct BoardEditorView: View {
 
                 if !board.strokes.isEmpty {
                     Button {
-                        withAnimation { withBoard { $0.strokes.removeAll() } }
+                        withAnimation(motion.animation(.default)) { withBoard { $0.strokes.removeAll() } }
                     } label: {
                         Label("Clear drawing", systemImage: "eraser")
                     }

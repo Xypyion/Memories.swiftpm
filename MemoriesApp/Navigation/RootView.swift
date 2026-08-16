@@ -34,7 +34,7 @@ struct RootView: View {
             }
         }
         .environment(\.motionPolicy, motionPolicy)
-        .animation(.spring(response: 0.45, dampingFraction: 0.86), value: account.isSignedIn)
+        .animation(motionPolicy.animation(.spring(response: 0.45, dampingFraction: 0.86)), value: account.isSignedIn)
         .onAppear { Haptics.enabled = !motionPolicy.isReduced }
         .onChange(of: motionPolicy.isReduced) { _, isReduced in
             Haptics.enabled = !isReduced
@@ -79,8 +79,8 @@ struct RootView: View {
             // scroll position for the purposes of hiding chrome.
             scrollOffset = 0
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: store.tab)
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: isEditingBoard)
+        .animation(motionPolicy.animation(.spring(response: 0.4, dampingFraction: 0.85)), value: store.tab)
+        .animation(motionPolicy.animation(.spring(response: 0.4, dampingFraction: 0.85)), value: isEditingBoard)
         .sheet(isPresented: $showsSettings) {
             SettingsView()
         }
@@ -142,7 +142,7 @@ struct RootView: View {
     private var boardTab: some View {
         if let openID = store.openBoardID, store.board(id: openID) != nil {
             BoardEditorView(boardID: openID) {
-                withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+                withAnimation(motionPolicy.animation(.spring(response: 0.42, dampingFraction: 0.85))) {
                     store.openBoardID = nil
                 }
             }

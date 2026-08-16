@@ -16,6 +16,8 @@ struct MemoriesView: View {
 
     @EnvironmentObject private var store: AppStore
 
+    @Environment(\.motionPolicy) private var motion
+
     @State private var grouping: MemoryGrouping = .day
     @State private var filter: MemoryFilter = .all
     @State private var query = ""
@@ -122,7 +124,7 @@ struct MemoriesView: View {
             HStack(spacing: 10) {
                 ForEach(MemoryFilter.allCases) { option in
                     FilterChip(title: option.title, isSelected: filter == option) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        withAnimation(motion.animation(.spring(response: 0.3, dampingFraction: 0.8))) {
                             filter = option
                         }
                     }
