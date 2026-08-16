@@ -188,14 +188,7 @@ struct VinylWidget: View {
     private var disc: some View {
         ZStack {
             Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color(hex: 0x1A1A1A), Color(hex: 0x050505)],
-                        center: .center,
-                        startRadius: 10,
-                        endRadius: 120
-                    )
-                )
+                .fill(Color(hex: 0x121214))
                 .frame(width: 200, height: 200)
 
             ForEach(1 ... 5, id: \.self) { ring in

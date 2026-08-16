@@ -43,40 +43,67 @@ extension UIColor {
 
 /// The single source of truth for colour in the app.
 ///
-/// Three rules govern every use of this palette:
+/// **The world is a gallery wall.** The room is neutral and quiet; the
+/// photographs are the only colour in it.
 ///
-/// 1. **Neon is a verb, not a surface.** `neon` is only ever applied to things
-///    that are *active* or *actionable*. It is never a background for passive
-///    content.
-/// 2. **Paper is a break, not a theme.** `paper` marks physical objects that sit
-///    *on* the board. Everything structural stays in the surface ladder.
+/// Every structural surface below is achromatic on purpose. A tinted ground —
+/// brown, blue, any cast at all — competes with the prints hung on it, and the
+/// prints are the product. Neutral is not the absence of a decision here; it is
+/// the decision that lets six photographs of six different days sit on one
+/// screen without fighting each other or the room.
+///
+/// Four rules govern every use of this palette:
+///
+/// 1. **Gold is a verb, not a surface.** `neon` (the token kept its name; the
+///    colour is now a photo-corner gold) only ever marks things that are
+///    *active* or *actionable*. It is never a background for passive content,
+///    and it is the only warm thing in the chrome.
+/// 2. **Flat, not lit.** Surfaces are single flat fills. No gradient stands in
+///    for a surface, no blurred colour bloom stands in for depth. Depth comes
+///    from the ladder below and from real shadows with a real offset.
 /// 3. **Objects don't change colour when you turn the lights on.** Light mode
-///    changes the *board* — the desk the memories are lying on — not the
-///    memories. Paper stays paper, vinyl stays vinyl, photos stay photos. Only
-///    the surface ladder and body text adapt. This is why the tactile language
+///    changes the *room* — the wall the memories hang on — not the memories.
+///    Paper stays paper, vinyl stays vinyl, photos stay photos. Only the
+///    surface ladder and body text adapt, which is why the tactile language
 ///    survives the theme switch intact rather than becoming a washed-out
 ///    inversion of itself.
+/// 4. **Two accents, and they mean one thing each.** Gold means active. Red
+///    means destructive or unread. Nothing else gets a colour.
 enum Palette {
 
-    // MARK: Foundation — the elevation ladder (adapts)
+    // MARK: Foundation — the surface ladder (adapts)
 
     /// Level 0. The app background.
-    static let void = Color.adaptive(light: 0xF4F3F0, dark: 0x000000)
+    ///
+    /// **Why light mode is not white.** Two separate mistakes make a light
+    /// theme glare. The first is using `#FFFFFF` for large surfaces at all —
+    /// on a display that reaches 1000 nits that is simply a lamp, and every
+    /// design system that has thought about it lands on an off-white instead.
+    /// The second is subtler and was the real fault here: the background and
+    /// the cards sat 2% apart, so the whole screen read as one flat sheet with
+    /// no structure, and the eye had nothing to rest against.
+    ///
+    /// The fix is range. The page is now meaningfully toned, cards are near-
+    /// white rather than white, and there is a real step between them — so
+    /// cards read as objects lying on a surface, which is what they are.
+    static let void = Color.adaptive(light: 0xEDEDEB, dark: 0x0A0A0B)
     /// Level 0.5. The canvas field, so item shadows read against it.
-    static let board = Color.adaptive(light: 0xEDECE8, dark: 0x050505)
-    /// Level 1. Cards resting on the board.
-    static let charcoal = Color.adaptive(light: 0xFFFFFF, dark: 0x101010)
-    static let surface = Color.adaptive(light: 0xF7F6F3, dark: 0x131313)
-    static let containerLow = Color.adaptive(light: 0xEFEEEA, dark: 0x1C1B1B)
-    static let container = Color.adaptive(light: 0xE9E8E3, dark: 0x201F1F)
-    static let containerHigh = Color.adaptive(light: 0xE3E2DD, dark: 0x2A2A2A)
-    static let containerHighest = Color.adaptive(light: 0xDCDBD5, dark: 0x353534)
+    static let board = Color.adaptive(light: 0xE4E4E1, dark: 0x0F0F11)
+    /// Level 1. Cards resting on the wall.
+    static let charcoal = Color.adaptive(light: 0xFCFCFB, dark: 0x151517)
+    static let surface = Color.adaptive(light: 0xF7F7F5, dark: 0x1A1A1C)
+    static let containerLow = Color.adaptive(light: 0xF1F1EE, dark: 0x202023)
+    static let container = Color.adaptive(light: 0xE9E9E6, dark: 0x26262A)
+    static let containerHigh = Color.adaptive(light: 0xDFDFDB, dark: 0x2F2F33)
+    static let containerHighest = Color.adaptive(light: 0xD3D3CE, dark: 0x38383D)
 
     // MARK: Content (adapts)
 
-    static let onSurface = Color.adaptive(light: 0x14150F, dark: 0xE5E2E1)
-    static let onSurfaceVariant = Color.adaptive(light: 0x565A48, dark: 0xC3C9AD)
-    static let outline = Color.adaptive(light: 0x747963, dark: 0x8D937A)
+    /// Not pure black on light: near-black at full strength on an off-white
+    /// ground is its own kind of glare, and 0x17171A still clears AA by miles.
+    static let onSurface = Color.adaptive(light: 0x17171A, dark: 0xF4F4F5)
+    static let onSurfaceVariant = Color.adaptive(light: 0x56565B, dark: 0xA6A6AD)
+    static let outline = Color.adaptive(light: 0x8A8A90, dark: 0x6E6E75)
 
     // MARK: Physical objects (static — see rule 3)
 
@@ -94,19 +121,25 @@ enum Palette {
 
     // MARK: Energy
 
-    /// Neon as a **fill**. Static — the vinyl is the same colour in any light,
-    /// and it always carries `onNeon` (near-black) text, so it stays legible on
-    /// either theme.
-    static let neon = Color(hex: 0xC8FF2E)
-    static let neonDim = Color(hex: 0xA5D700)
-    static let onNeon = Color(hex: 0x101010)
+    /// Photo-corner gold, as a **fill**. Static — a gold corner is the same
+    /// colour in any light — and it always carries `onNeon` (near-black) text,
+    /// so it stays legible on either theme.
+    ///
+    /// The token is still called `neon` because it names a *role* — the one
+    /// colour that means "active" — and renaming it would touch a hundred call
+    /// sites to say nothing new. The acid lime it used to hold was the single
+    /// loudest reason this app read as a dashboard rather than an album.
+    static let neon = Color(hex: 0xFFB300)
+    static let neonDim = Color(hex: 0xD19200)
+    static let onNeon = Color(hex: 0x141414)
 
-    /// Neon as **text or a stroke on a surface**. `#C8FF2E` is unreadable on a
-    /// light background, so this darkens to the palette's own deep green there.
+    /// Gold as **text or a stroke on a surface**. `#FFB300` on warm paper is
+    /// well under 4.5:1, so this drops to the album's own deep amber there.
     /// Use this anywhere the accent is the foreground; use `neon` for fills.
-    static let accent = Color.adaptive(light: 0x4E6700, dark: 0xC8FF2E)
+    static let accent = Color.adaptive(light: 0x8A5A00, dark: 0xFFB300)
 
-    static let pink = Color(hex: 0xFF2E7E)
+    /// The one red. Destructive actions and unread badges — nothing decorative.
+    static let pink = Color(hex: 0xE5484D)
     static let onPink = Color(hex: 0xFFFFFF)
 
     /// Text sitting on a dark scrim over a photograph — a board cover, a hero
@@ -114,9 +147,9 @@ enum Palette {
     /// changes the page behind the card, not the gradient painted over the
     /// picture inside it.
     static let onScrim = Color(hex: 0xFFFFFF)
-    static let onScrimVariant = Color(hex: 0xFFFFFF, opacity: 0.76)
-    /// Pink as foreground on a surface.
-    static let pinkAccent = Color.adaptive(light: 0xC1004E, dark: 0xFF2E7E)
+    static let onScrimVariant = Color(hex: 0xFFFFFF, opacity: 0.78)
+    /// Red as foreground on a surface.
+    static let pinkAccent = Color.adaptive(light: 0xC22026, dark: 0xF2555A)
 
     // MARK: Hairlines and shadows (adapt)
 
@@ -124,16 +157,19 @@ enum Palette {
     /// button). Opaque enough that a label on it stays legible no matter what is
     /// scrolling behind — a black cover photo in light mode, a white paper note
     /// in dark mode.
-    static let chromeSurface = Color.adaptive(light: 0xFFFFFF, dark: 0x141414, lightAlpha: 0.93, darkAlpha: 0.90)
+    static let chromeSurface = Color.adaptive(light: 0xFCFCFB, dark: 0x161618, lightAlpha: 0.95, darkAlpha: 0.92)
 
-    static let hairline = Color.adaptive(light: 0x000000, dark: 0xFFFFFF, lightAlpha: 0.10, darkAlpha: 0.10)
-    static let hairlineBright = Color.adaptive(light: 0x000000, dark: 0xFFFFFF, lightAlpha: 0.18, darkAlpha: 0.20)
+    /// Light mode leans on hairlines harder than dark does: dark separates
+    /// surfaces by making them lighter, light mode has much less headroom above
+    /// the page and needs the edge to do the work instead.
+    static let hairline = Color.adaptive(light: 0x000000, dark: 0xFFFFFF, lightAlpha: 0.14, darkAlpha: 0.10)
+    static let hairlineBright = Color.adaptive(light: 0x000000, dark: 0xFFFFFF, lightAlpha: 0.22, darkAlpha: 0.20)
 
-    /// Shadows tuned per theme. A 70%-black shadow reads as depth on a black
-    /// board and as dirt on a white one.
-    static let shadowHeavy = Color.adaptive(light: 0x1A1A14, dark: 0x000000, lightAlpha: 0.16, darkAlpha: 0.70)
-    static let shadowSoft = Color.adaptive(light: 0x1A1A14, dark: 0x000000, lightAlpha: 0.12, darkAlpha: 0.55)
-    static let shadowContact = Color.adaptive(light: 0x1A1A14, dark: 0x000000, lightAlpha: 0.10, darkAlpha: 0.35)
+    /// Shadows tuned per theme. A 70%-black shadow reads as depth on a dark
+    /// wall and as dirt on a light one.
+    static let shadowHeavy = Color.adaptive(light: 0x000000, dark: 0x000000, lightAlpha: 0.20, darkAlpha: 0.72)
+    static let shadowSoft = Color.adaptive(light: 0x000000, dark: 0x000000, lightAlpha: 0.14, darkAlpha: 0.55)
+    static let shadowContact = Color.adaptive(light: 0x000000, dark: 0x000000, lightAlpha: 0.10, darkAlpha: 0.35)
     /// The hard vinyl-sticker shadow. Stays dark in both themes — it is the
     /// object's own cast shadow, not ambient room light.
     static let shadowSticker = Color.adaptive(light: 0x000000, dark: 0x000000, lightAlpha: 0.55, darkAlpha: 1.0)

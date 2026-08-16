@@ -114,7 +114,38 @@ enum SampleData {
             width: 140
         )
 
-        roadtrip.items = [hero, polaroid, note, vibes, diner, star, ring]
+        // MARK: The two the coach is talking about
+        //
+        // The board is deliberately *almost* finished. Everything above is
+        // placed, angled and already roped into a chain — it reads as someone
+        // else's completed page, which is what makes it worth finishing rather
+        // than worth clearing.
+        //
+        // These last two are the hole in it. They sit together in the emptiest
+        // corner, they are the only photographs on the board with no rope
+        // attached, and `strayPolaroid` is knocked further off-angle than
+        // anything else here. That is the entire tutorial, stated in placement
+        // instead of prose: one thing obviously needs moving, two things
+        // obviously belong together, and the finished chain above shows what
+        // "belongs together" is supposed to look like when you're done.
+        let strayPolaroid = CanvasItem(
+            kind: .polaroid(PhotoPayload(caption: "Last stop", aspect: 1)),
+            position: CGPoint(x: 980, y: 1180),
+            rotation: -17,
+            zIndex: 7,
+            seed: 5514,
+            width: 250
+        )
+        let sunset = CanvasItem(
+            kind: .photo(PhotoPayload(caption: "Golden hour", aspect: 1.2)),
+            position: CGPoint(x: 1370, y: 1130),
+            rotation: 6,
+            zIndex: 5,
+            seed: 8823,
+            width: 290
+        )
+
+        roadtrip.items = [hero, polaroid, note, vibes, diner, star, ring, strayPolaroid, sunset]
 
         // Stamped after assembly rather than inline, so the item declarations
         // above stay readable as *placement* — which is what they're really

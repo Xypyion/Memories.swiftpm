@@ -66,13 +66,10 @@ struct GalleryView: View {
             Spacer(minLength: 24)
 
             if isWide {
-                ZStack {
-                    GlowBlob(color: Palette.pink, size: 150, opacity: 0.30)
-                    DecorationView(kind: .sparkle, size: 74, color: Palette.pink)
-                        .rotationEffect(.degrees(12))
-                }
-                .frame(width: 150, height: 150)
-                .accessibilityHidden(true)
+                DecorationView(kind: .sparkle, size: 64, color: Palette.accent)
+                    .rotationEffect(.degrees(12))
+                    .frame(width: 150, height: 150)
+                    .accessibilityHidden(true)
             }
         }
     }

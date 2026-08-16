@@ -169,12 +169,6 @@ struct FriendsHubView: View {
             }
             .padding(20)
             .glassPanel(cornerRadius: Radius.panel)
-            .overlay(alignment: .topTrailing) {
-                GlowBlob(color: Palette.pink, size: 140, opacity: 0.20)
-                    .offset(x: 40, y: -40)
-                    .allowsHitTesting(false)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: Radius.panel, style: .continuous))
         }
     }
 

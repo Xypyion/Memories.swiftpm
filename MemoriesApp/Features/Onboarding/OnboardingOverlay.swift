@@ -27,7 +27,7 @@ struct OnboardingCoach: View {
         // layer that can take a touch is the card itself. The board keeps the
         // rest of the screen.
         card
-            .frame(maxWidth: 420)
+            .frame(maxWidth: 480)
             .padding(.horizontal, Space.unit * 3)
             .animation(motion.animation(.spring(response: 0.42, dampingFraction: 0.82)), value: step)
             // Both gestures done: say so, then get out of the way on its own.
@@ -43,18 +43,22 @@ struct OnboardingCoach: View {
     private var card: some View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: icon)
-                .font(.system(size: 22, weight: .medium))
+                .symbolStyle(TypeScale.bodyLG, size: 25, weight: .medium)
                 .foregroundStyle(Palette.accent)
-                .frame(width: 34, height: 34)
+                .frame(width: 38, height: 38)
 
-            VStack(alignment: .leading, spacing: 5) {
+            // One step up the scale from where this started. A coach that is
+            // easy to ignore has failed at the only job it has, and this one is
+            // deliberately non-blocking — there is no scrim forcing anyone to
+            // read it, so it has to earn the glance on size alone.
+            VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .textStyle(TypeScale.bodyMD)
+                    .textStyle(TypeScale.bodyLG)
                     .fontWeight(.semibold)
                     .foregroundStyle(Palette.onSurface)
 
                 Text(detail)
-                    .textStyle(TypeScale.bodySM)
+                    .textStyle(TypeScale.bodyMD)
                     .foregroundStyle(Palette.onSurfaceVariant)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -71,8 +75,8 @@ struct OnboardingCoach: View {
                 progressDots
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 22)
+        .padding(.vertical, 18)
         .solidGlass(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
         .id(step)
         .transition(
@@ -125,9 +129,9 @@ struct OnboardingCoach: View {
     private var detail: String {
         switch step {
         case .drag:
-            "Put your finger on anything on the board and move it."
+            "Put your finger on anything and move it. The crooked polaroid near the bottom is asking for it."
         case .tie:
-            "Tap the link button in the dock, pick Twine, then tap two memories."
+            "Tap the link button in the dock, pick Twine, then tap two memories. The pair at the bottom isn't tied to anything yet."
         case .done:
             "Everything else — photos, notes, stickers, drawing — is in the dock."
         }

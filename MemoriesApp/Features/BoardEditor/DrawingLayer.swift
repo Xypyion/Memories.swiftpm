@@ -114,7 +114,9 @@ struct DrawingTool: Equatable {
     }
 
     var mode: Mode = .pen
-    var colorHex: UInt32 = 0xC8FF2E
+    /// White gel pen — what you actually caption a black album page with, and
+    /// the only default that reads on both a dark page and a light one.
+    var colorHex: UInt32 = 0xF2EDE3
     var penWidth: CGFloat = 5
     var highlighterWidth: CGFloat = 26
 
@@ -137,9 +139,9 @@ struct DrawingTool: Equatable {
     /// than eight good ones, and these are picked to read on both a black and a
     /// white board.
     static let palette: [Ink] = [
-        Ink(hex: 0xC8FF2E, name: "Neon"),
-        Ink(hex: 0xFF2E7E, name: "Pink"),
-        Ink(hex: 0xFFFFFF, name: "White"),
+        Ink(hex: 0xF2EDE3, name: "White"),
+        Ink(hex: 0xFFB300, name: "Gold"),
+        Ink(hex: 0xC8342A, name: "Red"),
         Ink(hex: 0x111111, name: "Ink"),
         Ink(hex: 0x36C5F0, name: "Sky"),
         Ink(hex: 0xFFC53D, name: "Amber"),

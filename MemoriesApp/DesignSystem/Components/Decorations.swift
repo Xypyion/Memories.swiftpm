@@ -104,26 +104,31 @@ struct DecorationView: View {
 
     let kind: DecorationKind
     var size: CGFloat = 80
-    var color: Color = Palette.neon
+    /// Paper, not ink. These are things cut out and laid on the board.
+    var color: Color = Palette.paper
 
     var body: some View {
         Group {
             switch kind {
             case .star:
+                // Filled, not stroked. A thin outlined star floating on a dark
+                // board reads as clip art dropped into the design; the same
+                // shape as a solid reads as a piece of paper someone cut out,
+                // which is what the rest of this board is made of.
                 StarShape()
-                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                    .fill(color)
             case .sparkle:
                 SparkleShape()
                     .fill(color)
             case .squiggle:
                 SquiggleShape()
-                    .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
             case .ring:
                 HandDrawnRing()
-                    .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
             case .arrow:
                 ArrowShape()
-                    .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                    .stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
             }
         }
         .frame(width: size, height: kind == .squiggle ? size * 0.4 : size)
@@ -146,20 +151,7 @@ struct ArrowShape: Shape {
     }
 }
 
-/// A soft coloured bloom. Used behind headings and inside panels to break up
-/// large fields of black without adding a visible surface.
-struct GlowBlob: View {
-
-    var color: Color = Palette.pink
-    var size: CGFloat = 220
-    var opacity: Double = 0.28
-
-    var body: some View {
-        Circle()
-            .fill(color)
-            .frame(width: size, height: size)
-            .blur(radius: size * 0.34)
-            .opacity(opacity)
-            .allowsHitTesting(false)
-    }
-}
+// `GlowBlob` — a blurred coloured circle floated behind headings — was deleted
+// rather than retuned. It was decoration standing in for depth, it was the
+// single largest source of the soft coloured haze this UI used to sit under,
+// and every one of its six uses looked better as plain ground.

@@ -61,12 +61,6 @@ struct LoginView: View {
         ZStack {
             Palette.void
 
-            GlowBlob(color: Palette.pink, size: 460, opacity: 0.20)
-                .offset(x: -size.width * 0.28, y: -size.height * 0.22)
-
-            GlowBlob(color: Palette.neon, size: 380, opacity: 0.14)
-                .offset(x: size.width * 0.32, y: size.height * 0.28)
-
             // Three objects on an otherwise empty board — the product's whole
             // idea, stated before a single word of copy.
             DecorationView(kind: .star, size: 74, color: Palette.accent)

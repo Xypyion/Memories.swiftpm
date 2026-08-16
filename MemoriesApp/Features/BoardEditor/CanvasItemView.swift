@@ -126,7 +126,7 @@ struct CanvasItemView: View {
                 .scaleEffect(item.width / 160)
 
         case .decoration(let kind):
-            DecorationView(kind: kind, size: item.width, color: Palette.accent)
+            DecorationView(kind: kind, size: item.width, color: Palette.paper)
         }
     }
 

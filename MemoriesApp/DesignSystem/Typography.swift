@@ -19,10 +19,22 @@ struct TextStyle {
     var ramp: Font.TextStyle
     var tracking: CGFloat = 0
     var lineSpacing: CGFloat = 0
+    /// Which of the two voices this token speaks in. See `TypeScale`.
+    var design: Font.Design = .default
 }
 
-/// SF Pro throughout, per the handoff. No bundled font files and no licence
-/// surface.
+/// **Two voices.** Titles are set in New York, the system serif; everything
+/// operational — body, labels, nav, stickers — stays in SF Pro.
+///
+/// The split is the hierarchy. Before it, every line in the app was SF at some
+/// weight, so a board title and a timestamp differed only by size and the page
+/// had no voice at all. A serif at display size gives a photograph's caption the
+/// gravity of a printed one, and confining it to titles keeps the working parts
+/// of the interface plainly legible, which is what an Operate surface owes its
+/// user. Two faces is a system; three would be decoration.
+///
+/// Both are system faces, so no font files ship, nothing is licensed, and the
+/// package stays at kilobytes.
 ///
 /// **On Dynamic Type.** These are authored point sizes rather than the system
 /// styles, because the handoff's scale (56 / 32 / 24 / 18 / 16 / 14 / 12 / 11)
@@ -34,31 +46,38 @@ struct TextStyle {
 /// along the right curve from there.
 enum TypeScale {
 
-    /// 56/64, -0.02em. Page titles on iPad only.
+    /// 56/64, serif. Page titles on iPad only.
+    ///
+    /// Tracking is looser than the old SF setting: New York is already drawn
+    /// tighter at display sizes, and inheriting SF's -0.02em collapsed the
+    /// serifs into each other.
     static let displayLG = TextStyle(
         size: 56,
         weight: .bold,
         ramp: .largeTitle,
-        tracking: -1.12,
-        lineSpacing: 4
+        tracking: -0.9,
+        lineSpacing: 4,
+        design: .serif
     )
 
-    /// 32/40, -0.02em. Page titles in compact width; board titles.
+    /// 32/40, serif. Page titles in compact width; board titles.
     static let displayMD = TextStyle(
         size: 32,
         weight: .bold,
         ramp: .title,
-        tracking: -0.64,
-        lineSpacing: 4
+        tracking: -0.5,
+        lineSpacing: 4,
+        design: .serif
     )
 
-    /// 24/32. Section headings.
+    /// 24/32, serif. Section headings.
     static let headline = TextStyle(
         size: 24,
         weight: .semibold,
         ramp: .title2,
-        tracking: -0.24,
-        lineSpacing: 4
+        tracking: -0.2,
+        lineSpacing: 4,
+        design: .serif
     )
 
     /// 18/28. Lead paragraphs and note bodies.
@@ -136,7 +155,7 @@ struct ScaledTextStyle: ViewModifier {
         let ratio = size / style.size
 
         return content
-            .font(.system(size: size, weight: style.weight))
+            .font(.system(size: size, weight: style.weight, design: style.design))
             .tracking(style.tracking * ratio)
             .lineSpacing(style.lineSpacing * ratio)
     }
@@ -154,6 +173,9 @@ extension View {
     /// scales — the pairing drifts apart exactly when the reader most needs it to
     /// hold together. Icons keep their own size and weight, which are optically
     /// matched to the label rather than equal to it, and inherit only the ramp.
+    /// Symbols always speak in SF — SF Symbols are drawn on its metrics, and a
+    /// serif-designed font would leave the glyph optically adrift from the
+    /// label it sits beside.
     func symbolStyle(_ style: TextStyle, size: CGFloat, weight: Font.Weight) -> some View {
         modifier(ScaledTextStyle(TextStyle(size: size, weight: weight, ramp: style.ramp)))
     }

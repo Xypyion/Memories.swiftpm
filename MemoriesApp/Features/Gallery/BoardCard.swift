@@ -35,14 +35,10 @@ struct BoardCollage: View {
 
     private var emptyState: some View {
         ZStack {
-            LinearGradient(
-                colors: [Palette.containerLow, Palette.charcoal],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Palette.containerLow
             Image(systemName: "square.dashed")
                 .font(.system(size: 34, weight: .light))
-                .foregroundStyle(Palette.onSurfaceVariant.opacity(0.35))
+                .foregroundStyle(Palette.onSurfaceVariant.opacity(0.4))
         }
     }
 
@@ -121,17 +117,30 @@ struct BoardCard: View {
 
     var body: some View {
         Button(action: onOpen) {
-            ZStack(alignment: .bottomLeading) {
-                BoardCollage(board: board)
-                    // The collage is static per board: rasterise it once and
-                    // scroll the bitmap, instead of re-compositing five layered,
-                    // rotated, shadowed gradient stacks every frame.
-                    .drawingGroup()
-                    .opacity(0.75)
+            // A gallery label, not a caption burned into the picture.
+            //
+            // The title used to sit on the cover under a gradient scrim that
+            // reached 88% black, with the cover itself dimmed to 75% underneath
+            // it. Between them the artwork was barely visible — every board in
+            // the gallery came out as the same grey haze. Now the picture runs
+            // at full strength and the words sit below it on their own solid
+            // plate, which is both how a print is actually labelled and the only
+            // arrangement where the title's contrast doesn't depend on whatever
+            // the cover happens to look like.
+            VStack(spacing: 0) {
+                ZStack(alignment: .top) {
+                    BoardCollage(board: board)
+                        // The collage is static per board: rasterise it once and
+                        // scroll the bitmap, instead of re-compositing five
+                        // layered, rotated, shadowed stacks every frame.
+                        .drawingGroup()
 
-                scrim
+                    marks
+                }
+                .frame(maxHeight: .infinity)
+                .clipped()
 
-                content
+                caption
             }
             .frame(height: height)
             .frame(maxWidth: .infinity)
@@ -146,39 +155,28 @@ struct BoardCard: View {
         .accessibilityLabel("\(board.title), \(board.memoryCount) memories")
     }
 
-    private var scrim: some View {
-        LinearGradient(
-            colors: [
-                .black.opacity(0.05),
-                .black.opacity(0.55),
-                .black.opacity(0.88)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-
-    private var content: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top) {
-                if !board.badge.isEmpty {
-                    StickerBadge(text: board.badge, style: board.badgeStyle, rotation: -2)
-                }
-
-                Spacer(minLength: 12)
-
-                if !collaborators.isEmpty {
-                    FacePile(people: collaborators, size: 32, maxVisible: 3, borderColor: Palette.charcoal)
-                }
+    /// What sits *on* the picture: the board's badge and who else is on it.
+    /// Both carry their own backing, so neither needs the picture dimmed.
+    private var marks: some View {
+        HStack(alignment: .top) {
+            if !board.badge.isEmpty {
+                StickerBadge(text: board.badge, style: board.badgeStyle, rotation: -2)
             }
 
-            Spacer(minLength: 24)
+            Spacer(minLength: 12)
 
-            // Fixed light text: this sits on the dark scrim painted over the
-            // cover photo, which does not change with the theme.
+            if !collaborators.isEmpty {
+                FacePile(people: collaborators, size: 32, maxVisible: 3, borderColor: Palette.charcoal)
+            }
+        }
+        .padding(Space.unit * 2)
+    }
+
+    private var caption: some View {
+        VStack(alignment: .leading, spacing: 4) {
             Text(board.title)
                 .textStyle(isHero ? TypeScale.displayMD : TypeScale.headline)
-                .foregroundStyle(Palette.onScrim)
+                .foregroundStyle(Palette.onSurface)
                 .lineLimit(2)
                 // The card is a fixed-height tile in the bento, so a scaled-up
                 // title has nowhere to go. Two lines, then shrink — a title that
@@ -189,11 +187,12 @@ struct BoardCard: View {
 
             Text("\(board.memoryCount) memories · \(RelativeTime.updatedString(for: board.updatedAt))")
                 .textStyle(TypeScale.labelCaps)
-                .foregroundStyle(Palette.onScrimVariant)
-                .padding(.top, 6)
+                .foregroundStyle(Palette.onSurfaceVariant)
         }
-        .padding(Space.unit * 3)
+        .padding(.horizontal, Space.unit * 2.5)
+        .padding(.vertical, Space.unit * 2)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Palette.charcoal)
     }
 }
 

@@ -12,17 +12,7 @@ struct TapeStrip: View {
 
     var body: some View {
         Rectangle()
-            .fill(
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.42),
-                        Color.white.opacity(0.26),
-                        Color.white.opacity(0.40)
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
+            .fill(Color.white.opacity(0.34))
             .frame(width: width, height: 26)
             .overlay(Rectangle().strokeBorder(Color.white.opacity(0.22), lineWidth: 0.5))
             .background(.ultraThinMaterial)
@@ -38,14 +28,7 @@ struct PushPin: View {
 
     var body: some View {
         Circle()
-            .fill(
-                RadialGradient(
-                    colors: [color.opacity(0.95), color],
-                    center: UnitPoint(x: 0.35, y: 0.3),
-                    startRadius: 1,
-                    endRadius: 14
-                )
-            )
+            .fill(color)
             .frame(width: 22, height: 22)
             .overlay {
                 Circle()

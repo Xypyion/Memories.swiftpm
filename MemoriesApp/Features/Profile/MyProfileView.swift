@@ -68,14 +68,7 @@ struct MyProfileView: View {
             .scrollIndicators(.hidden)
             .tracksScrollOffset()
             .background {
-                ZStack {
-                    Palette.void
-                    GlowBlob(color: Palette.pink, size: 420, opacity: 0.14)
-                        .offset(x: -geo.size.width * 0.3, y: -120)
-                    GlowBlob(color: Palette.neon, size: 360, opacity: 0.09)
-                        .offset(x: geo.size.width * 0.35, y: 260)
-                }
-                .ignoresSafeArea()
+                Palette.void.ignoresSafeArea()
             }
         }
         .toast($toast)
