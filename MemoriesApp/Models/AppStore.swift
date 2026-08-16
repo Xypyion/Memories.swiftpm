@@ -39,14 +39,15 @@ final class AppStore: ObservableObject {
             activity = seeded.activity
             profile = seeded.profile
 
-            // Nothing saved means nobody has been here before, so open straight
-            // onto the richest board. A first launch that lands on a populated
-            // canvas explains the product in one screen; the gallery does not.
+            // Everyone starts on the gallery, including a first-time visitor.
             //
-            // Only in this branch: a returning user has saved state and keeps
-            // the gallery. Board IDs are minted fresh inside `make()` every
-            // run, so the showcase is resolved by title, never by a fixed UUID.
-            openBoardID = AppStore.showcaseBoard(in: boards)?.id
+            // This used to open the showcase board directly, on the argument
+            // that a populated canvas explains the product faster than a list
+            // of boards does. It does — but it also drops someone into a
+            // sub-screen with a tutorial already running, before they have seen
+            // what the app is or that other boards exist, and the back button
+            // is then the first thing they look for. Your Boards is the front
+            // door, and the demo board is one tap through it.
         }
 
         objectWillChange
@@ -56,11 +57,6 @@ final class AppStore: ObservableObject {
     }
 
     // MARK: Lookups
-
-    /// The board a cold visitor should be shown: the one with the most on it.
-    static func showcaseBoard(in boards: [Board]) -> Board? {
-        boards.first { $0.title == "Trip to the Sahara" } ?? boards.first
-    }
 
     func board(id: UUID) -> Board? {
         boards.first { $0.id == id }

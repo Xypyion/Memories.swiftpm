@@ -104,8 +104,9 @@ struct DecorationView: View {
 
     let kind: DecorationKind
     var size: CGFloat = 80
-    /// Paper, not ink. These are things cut out and laid on the board.
-    var color: Color = Palette.paper
+    /// Adaptive by default, so a mark is legible on a light board and a dark
+    /// one. Callers that sit on a fixed ground pass their own colour.
+    var color: Color = Palette.onSurface
 
     var body: some View {
         Group {
@@ -135,18 +136,39 @@ struct DecorationView: View {
     }
 }
 
+/// A hand-drawn arrow: a curved shaft sweeping up to the right, with a head
+/// that actually points where the shaft is going.
+///
+/// The head is the whole problem with drawing one of these. Barbs placed by eye
+/// relative to the *frame* rather than to the shaft's direction of travel come
+/// out lopsided, and at small sizes the shape stops reading as an arrow and
+/// starts reading as a squiggle with a nick in it — which is what this was.
+/// Both barbs here are set off the tangent at the tip, one either side, so the
+/// head stays symmetrical about the direction the arrow is actually pointing.
 struct ArrowShape: Shape {
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        let w = rect.width
+        let h = rect.height
+
+        // Kept off the right edge: the stroke is drawn centred on the path, so
+        // a tip at `maxX` loses half its width to clipping.
+        let tip = CGPoint(x: rect.minX + w * 0.86, y: rect.minY + h * 0.16)
+
+        path.move(to: CGPoint(x: rect.minX + w * 0.06, y: rect.minY + h * 0.86))
         path.addQuadCurve(
-            to: CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.2),
-            control: CGPoint(x: rect.midX, y: rect.maxY)
+            to: tip,
+            control: CGPoint(x: rect.minX + w * 0.52, y: rect.minY + h * 0.94)
         )
-        path.move(to: CGPoint(x: rect.maxX - rect.width * 0.28, y: rect.minY + rect.height * 0.06))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.2))
-        path.addLine(to: CGPoint(x: rect.maxX - rect.width * 0.16, y: rect.minY + rect.height * 0.42))
+
+        // The head, as one continuous stroke through the tip rather than two
+        // separate lines meeting at it — a join reads as drawn, two ends
+        // reads as broken.
+        path.move(to: CGPoint(x: rect.minX + w * 0.58, y: rect.minY + h * 0.31))
+        path.addLine(to: tip)
+        path.addLine(to: CGPoint(x: rect.minX + w * 0.90, y: rect.minY + h * 0.48))
+
         return path
     }
 }

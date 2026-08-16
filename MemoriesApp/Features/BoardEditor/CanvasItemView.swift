@@ -126,10 +126,16 @@ struct CanvasItemView: View {
                 .scaleEffect(item.width / 160)
 
         case .decoration(let kind):
-            // Held back from full paper white. At full strength a solid star
-            // beside four photographs competes with them, and these are meant
-            // to fill gaps between memories, not to be one.
-            DecorationView(kind: kind, size: item.width, color: Palette.paper.opacity(0.55))
+            // Adaptive, not paper white. These are drawn marks, not objects —
+            // pen on the page rather than something cut out and laid on it — so
+            // unlike a polaroid or a sticker they have to follow the board. A
+            // fixed white star is invisible on a light board, which is exactly
+            // what it was.
+            //
+            // Held below full strength either way: a solid mark at full
+            // contrast beside four photographs competes with them, and these
+            // exist to fill the gaps between memories, not to be one.
+            DecorationView(kind: kind, size: item.width, color: Palette.onSurface.opacity(0.62))
         }
     }
 
