@@ -59,7 +59,7 @@ final class AppStore: ObservableObject {
 
     /// The board a cold visitor should be shown: the one with the most on it.
     static func showcaseBoard(in boards: [Board]) -> Board? {
-        boards.first { $0.title == "Roadtrip Chaos" } ?? boards.first
+        boards.first { $0.title == "Trip to the Sahara" } ?? boards.first
     }
 
     func board(id: UUID) -> Board? {

@@ -45,11 +45,11 @@ enum SampleData {
 
         let friends = [sarah, leo, maya, marcus, mia, jonas]
 
-        // MARK: Roadtrip Chaos — the demonstration board
+        // MARK: Trip to the Sahara — the demonstration board
 
         var roadtrip = Board(
-            title: "Roadtrip Chaos",
-            caption: "Six days, one bad map, zero regrets.",
+            title: "Trip to the Sahara",
+            caption: "Nine days, one jeep, sand in absolutely everything.",
             badge: "Summer '24",
             badgeStyle: .neon,
             seed: 1042,
@@ -255,7 +255,7 @@ enum SampleData {
             ),
             ActivityEvent(
                 friendID: mia.id, kind: .commented, detail: "the polaroid",
-                boardName: "Roadtrip Chaos", date: Date().addingTimeInterval(-19_000),
+                boardName: "Trip to the Sahara", date: Date().addingTimeInterval(-19_000),
                 photoSeeds: [8804]
             ),
             ActivityEvent(

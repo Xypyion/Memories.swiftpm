@@ -88,7 +88,7 @@ enum Palette {
     /// cards read as objects lying on a surface, which is what they are.
     static let void = Color.adaptive(light: 0xEDEDEB, dark: 0x0A0A0B)
     /// Level 0.5. The canvas field, so item shadows read against it.
-    static let board = Color.adaptive(light: 0xE4E4E1, dark: 0x0F0F11)
+    static let board = Color.adaptive(light: 0xE4E4E1, dark: 0x17171A)
     /// Level 1. Cards resting on the wall.
     static let charcoal = Color.adaptive(light: 0xFCFCFB, dark: 0x151517)
     static let surface = Color.adaptive(light: 0xF7F7F5, dark: 0x1A1A1C)
