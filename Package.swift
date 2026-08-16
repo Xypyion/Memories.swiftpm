@@ -37,7 +37,12 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "MemoriesApp",
-            path: "MemoriesApp"
+            path: "MemoriesApp",
+            // The demo board's four photographs. An asset catalogue, which is
+            // the resource form Swift Playgrounds' own app template uses, so it
+            // goes through the pipeline that already builds this app's icon and
+            // accent colour rather than around it.
+            resources: [.process("Assets.xcassets")]
         )
     ]
 )

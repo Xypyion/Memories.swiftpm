@@ -47,11 +47,20 @@ enum ImageStore {
         if let cached = cache.object(forKey: name as NSString) {
             return cached
         }
-        guard let image = UIImage(contentsOfFile: url(for: name).path) else {
+        // The user's own imports live on disk under Application Support; the
+        // demo board's photographs live in the asset catalogue. A given name
+        // only ever resolves to one of the two, and the user's file wins.
+        var found = UIImage(contentsOfFile: url(for: name).path)
+        if found == nil {
+            found = UIImage(named: (name as NSString).deletingPathExtension)
+        }
+
+        guard let resolved = found else {
             return nil
         }
-        cache.setObject(image, forKey: name as NSString)
-        return image
+
+        cache.setObject(resolved, forKey: name as NSString)
+        return resolved
     }
 
     static func delete(named name: String) {

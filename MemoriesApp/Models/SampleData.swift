@@ -59,7 +59,7 @@ enum SampleData {
         )
 
         let hero = CanvasItem(
-            kind: .photo(PhotoPayload(caption: "Desert exit", aspect: 0.8)),
+            kind: .photo(PhotoPayload(imageName: "sahara-camp.jpg", caption: "Camp at golden hour", aspect: 1.5)),
             position: CGPoint(x: 620, y: 430),
             rotation: -3,
             zIndex: 4,
@@ -67,7 +67,7 @@ enum SampleData {
             width: 300
         )
         let polaroid = CanvasItem(
-            kind: .polaroid(PhotoPayload(caption: "Late nights", aspect: 1)),
+            kind: .polaroid(PhotoPayload(imageName: "sahara-camels.jpg", caption: "They spat at Leo", aspect: 0.667)),
             position: CGPoint(x: 1120, y: 620),
             rotation: 4,
             zIndex: 3,
@@ -90,7 +90,7 @@ enum SampleData {
             seed: 5
         )
         let diner = CanvasItem(
-            kind: .photo(PhotoPayload(caption: "Diner, 2am", isFavorite: true, aspect: 1.35)),
+            kind: .photo(PhotoPayload(imageName: "sahara-dunes.jpg", caption: "Dune bashing", isFavorite: true, aspect: 1.0)),
             position: CGPoint(x: 1620, y: 380),
             rotation: 5,
             zIndex: 2,
@@ -129,7 +129,7 @@ enum SampleData {
         // obviously belong together, and the finished chain above shows what
         // "belongs together" is supposed to look like when you're done.
         let strayPolaroid = CanvasItem(
-            kind: .polaroid(PhotoPayload(caption: "Last stop", aspect: 1)),
+            kind: .polaroid(PhotoPayload(imageName: "sahara-jump.jpg", caption: "Maya landed badly", aspect: 1.5)),
             position: CGPoint(x: 980, y: 1180),
             rotation: -17,
             zIndex: 7,
