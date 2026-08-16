@@ -60,8 +60,8 @@ struct MyProfileView: View {
                     }
                 }
                 .padding(.horizontal, isWide ? Space.canvasMargin : Space.unit * 2.5)
-                .padding(.top, Space.topBarClearance + Space.unit * 2)
-                .padding(.bottom, Space.dockClearance)
+                .topBarClearance(extra: Space.unit * 2)
+                .dockClearance()
                 .frame(maxWidth: 900)
                 .frame(maxWidth: .infinity)
             }

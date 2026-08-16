@@ -53,7 +53,7 @@ struct FloatingSettingsButton: View {
             Image(systemName: "gearshape")
                 .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(Palette.onSurfaceVariant)
-                .frame(width: 42, height: 42)
+                .frame(width: 44, height: 44)
                 .solidGlass(Circle())
                 .contentShape(Circle())
         }

@@ -15,6 +15,8 @@ struct FriendsHubView: View {
 
     @EnvironmentObject private var store: AppStore
 
+    @Environment(\.motionPolicy) private var motion
+
     @State private var openFriend: Friend?
     @State private var query = ""
     @State private var toast: ToastMessage?
@@ -56,8 +58,8 @@ struct FriendsHubView: View {
                     }
                 }
                 .padding(.horizontal, geo.size.width > 700 ? Space.canvasMargin : Space.unit * 2.5)
-                .padding(.top, Space.topBarClearance)
-                .padding(.bottom, Space.dockClearance)
+                .topBarClearance()
+                .dockClearance()
                 .frame(maxWidth: 1440)
                 .frame(maxWidth: .infinity)
             }
@@ -207,7 +209,7 @@ struct FriendsHubView: View {
             HStack(spacing: 8) {
                 Button {
                     let name = store.friend(id: invite.friendID)?.firstName ?? "them"
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    withAnimation(motion.animation(.spring(response: 0.35, dampingFraction: 0.8))) {
                         store.acceptInvite(invite)
                     }
                     toast = ToastMessage(text: "Joined \(invite.boardName) with \(name)")
@@ -217,12 +219,13 @@ struct FriendsHubView: View {
                         .foregroundStyle(Palette.onNeon)
                         .frame(width: 34, height: 34)
                         .background(Circle().fill(Palette.neon))
+                        .minimumHitArea()
                 }
                 .buttonStyle(PressableButtonStyle())
                 .accessibilityLabel("Accept invite")
 
                 Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    withAnimation(motion.animation(.spring(response: 0.35, dampingFraction: 0.8))) {
                         store.declineInvite(invite)
                     }
                     toast = ToastMessage(text: "Invite declined", tone: .warning)
@@ -232,6 +235,7 @@ struct FriendsHubView: View {
                         .foregroundStyle(Palette.onSurfaceVariant)
                         .frame(width: 34, height: 34)
                         .background(Circle().fill(Palette.containerHigh))
+                        .minimumHitArea()
                 }
                 .buttonStyle(PressableButtonStyle())
                 .accessibilityLabel("Decline invite")

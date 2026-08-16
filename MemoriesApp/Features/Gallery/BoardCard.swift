@@ -180,6 +180,11 @@ struct BoardCard: View {
                 .textStyle(isHero ? TypeScale.displayMD : TypeScale.headline)
                 .foregroundStyle(Palette.onScrim)
                 .lineLimit(2)
+                // The card is a fixed-height tile in the bento, so a scaled-up
+                // title has nowhere to go. Two lines, then shrink — a title that
+                // gives back a fifth of its size still reads, where one clipped
+                // by the tile's corner radius does not.
+                .minimumScaleFactor(0.8)
                 .multilineTextAlignment(.leading)
 
             Text("\(board.memoryCount) memories · \(RelativeTime.updatedString(for: board.updatedAt))")
@@ -196,10 +201,24 @@ struct BoardCard: View {
 /// treating them as physical objects.
 struct LiftButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.985 : 1)
-            .offset(y: configuration.isPressed ? 2 : 0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
+        Lift(isPressed: configuration.isPressed, label: configuration.label)
+    }
+
+    /// Split out for the same reason as `PressableButtonStyle.Pressable`: a
+    /// `ButtonStyle` cannot observe the environment, and a view can.
+    private struct Lift: View {
+
+        let isPressed: Bool
+        let label: ButtonStyleConfiguration.Label
+
+        @Environment(\.motionPolicy) private var motion
+
+        var body: some View {
+            label
+                .scaleEffect(isPressed ? 0.985 : 1)
+                .offset(y: isPressed ? 2 : 0)
+                .animation(motion.animation(.spring(response: 0.3, dampingFraction: 0.7)), value: isPressed)
+        }
     }
 }
 

@@ -218,7 +218,9 @@ struct VinylWidget: View {
 
     private func startSpin() {
         guard !motion.isReduced else {
-            withAnimation(.easeOut(duration: 0.3)) { angle = 0 }
+            // Straighten the record instantly. Animating the *stop* would be
+            // motion too, which is the one thing this branch exists to avoid.
+            angle = 0
             return
         }
         withAnimation(.linear(duration: 16).repeatForever(autoreverses: false)) {

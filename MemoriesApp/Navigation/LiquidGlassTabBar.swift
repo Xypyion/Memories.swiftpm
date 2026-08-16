@@ -38,6 +38,10 @@ struct LiquidGlassTabBar: View {
         .padding(.vertical, 8)
         .solidGlass(Capsule(style: .continuous))
         .padding(.bottom, Space.unit * 3)
+        // A fixed capsule floating over the canvas: it grows with the reader's
+        // text size, but only to the last non-accessibility step. Past that it
+        // would be wider than the iPad.
+        .fixedLayoutTypeCeiling()
     }
 
     private func item(for tab: AppTab) -> some View {
@@ -64,7 +68,9 @@ struct LiquidGlassTabBar: View {
                     .textStyle(TypeScale.labelTiny)
             }
             .foregroundStyle(isSelected ? Palette.onNeon : Palette.onSurfaceVariant)
-            .frame(width: 86, height: 58)
+            // Minimums rather than fixed dimensions, so a scaled-up label
+            // widens its own pill instead of being clipped by it.
+            .frame(minWidth: 86, minHeight: 58)
             .background {
                 if isSelected {
                     Capsule(style: .continuous).fill(Palette.neon)

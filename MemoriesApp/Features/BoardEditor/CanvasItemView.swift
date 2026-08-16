@@ -69,6 +69,12 @@ struct CanvasItemView: View {
 
     var body: some View {
         content
+            // An object on the board is artwork, not chrome. Its size is already
+            // under direct control — pinch it — and the caption is set inside a
+            // frame the user chose, so letting the accessibility text sizes
+            // through here would rearrange a board the user composed by hand.
+            // The inspector that edits this caption is chrome and scales fully.
+            .fixedLayoutTypeCeiling()
             .overlay { chrome }
             .overlay(alignment: .topTrailing) { deleteButton }
             .rotationEffect(.degrees(item.rotation + twistDegrees))
@@ -93,7 +99,7 @@ struct CanvasItemView: View {
             .onTapGesture { isSelected ? onActivate() : onSelect() }
             .gesture(dragGesture)
             .simultaneousGesture(transformGesture, including: isSelected ? .all : .subviews)
-            .animation(.spring(response: 0.3, dampingFraction: 0.75), value: isSelected)
+            .animation(motion.animation(.spring(response: 0.3, dampingFraction: 0.75)), value: isSelected)
             .animation(motion.animation(Motion.pop), value: isJustTied)
     }
 
@@ -156,9 +162,13 @@ struct CanvasItemView: View {
                     .frame(width: 28, height: 28)
                     .background(Circle().fill(Palette.pink))
                     .overlay(Circle().strokeBorder(Palette.ink, lineWidth: 2))
+                    // The badge stays 28pt — bigger would cover the memory it
+                    // belongs to — but the target around it is 44. The offset
+                    // absorbs the extra 8pt so the badge sits where it did.
+                    .minimumHitArea()
             }
             .buttonStyle(PressableButtonStyle())
-            .offset(x: 14, y: -14)
+            .offset(x: 22, y: -22)
             .accessibilityLabel("Delete \(item.kind.label)")
         }
     }

@@ -65,6 +65,7 @@ struct OnboardingCoach: View {
                 Button(step == .done ? "Done" : "Skip", action: onFinish)
                     .textStyle(TypeScale.labelCaps)
                     .foregroundStyle(step == .done ? Palette.accent : Palette.onSurfaceVariant)
+                    .minimumHitArea()
                     .accessibilityHint("Closes the tutorial and won't show it again")
 
                 progressDots
@@ -124,7 +125,7 @@ struct OnboardingCoach: View {
     private var detail: String {
         switch step {
         case .drag:
-            "Put your finger on anything on the board and move it. Nothing snaps to a grid."
+            "Put your finger on anything on the board and move it."
         case .tie:
             "Tap the link button in the dock, pick Twine, then tap two memories."
         case .done:

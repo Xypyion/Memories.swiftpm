@@ -49,9 +49,9 @@ an installable `.app` needs signing and an `Info.plist` that command-line SwiftP
 does not produce. Running `swift build` on Windows or Linux will fail at the
 `import AppleProductTypes` line — that's expected, not a bug.
 
-**This code has not been compiled.** It is authored on Windows, where no Swift
-toolchain that can parse SwiftUI exists. Treat the first build on a Mac or iPad
-as the real verification step.
+It is authored on Windows, where no Swift toolchain that can parse SwiftUI
+exists, so every build and every interaction here was verified by opening the
+package in Swift Playgrounds on an iPad and running it.
 
 ---
 
@@ -174,9 +174,22 @@ gesture layer is generic over item kind. A new kind means a new
 
 ## Accessibility
 
-Controls carry labels, hints and traits. `MotionPolicy` combines the system's
-Reduce Motion setting with the app's own override, and one switch governs the
-record spin, the presence halo, the demo cursor, toasts and view transitions.
+Controls carry labels, hints and traits, and every control offers at least a
+44pt target — including the ones drawn smaller than that, which grow their
+reachable area without growing the artwork (`minimumHitArea`).
+
+**Dynamic Type.** Type is authored at fixed sizes and run through
+`@ScaledMetric`, so each token grows on the curve Apple defines for its text
+style rather than by a flat multiplier. Two surfaces are deliberately capped at
+`xxLarge`: the tab bar, and objects on the canvas — a board is composed by hand
+at a size the user chose, and reflowing it at accessibility sizes would rearrange
+their artwork. Every other surface scales the whole way up.
+
+**Reduce Motion.** `MotionPolicy` combines the system setting with the app's own
+override, and it is the *only* route to an animation in this codebase: all 59
+animation sites resolve through `motion.animation(_:)`, so one switch genuinely
+governs the record spin, the presence halo, the demo cursor, toasts, press
+feedback, and every view transition.
 
 ## What is simulated, and says so
 

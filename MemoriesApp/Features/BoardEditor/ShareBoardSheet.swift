@@ -10,6 +10,7 @@ struct ShareBoardSheet: View {
     let collaborators: [Friend]
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.motionPolicy) private var motion
     @State private var didCopy = false
 
     private var inviteLink: String {
@@ -131,7 +132,7 @@ struct ShareBoardSheet: View {
                     isCompact: true
                 ) {
                     UIPasteboard.general.string = inviteLink
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    withAnimation(motion.animation(.spring(response: 0.3, dampingFraction: 0.7))) {
                         didCopy = true
                     }
                 }

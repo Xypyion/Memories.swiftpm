@@ -14,10 +14,15 @@ struct NeonButton: View {
             HStack(spacing: 7) {
                 if let icon {
                     Image(systemName: icon)
-                        .font(.system(size: 14, weight: .bold))
+                        .symbolStyle(TypeScale.sticker, size: 14, weight: .bold)
                 }
                 Text(title)
                     .textStyle(TypeScale.sticker)
+                    // A button label is a name, not prose. Breaking "Share" into
+                    // "Sh / are" to fit a squeezed row is never the right answer:
+                    // the label holds its width and the row gives ground.
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .foregroundStyle(Palette.onNeon)
             .padding(.horizontal, isCompact ? 16 : 24)
@@ -65,13 +70,45 @@ struct GlassIconButton: View {
     }
 }
 
+extension View {
+    /// Guarantees a control the platform's 44pt minimum touch area without
+    /// changing what is drawn.
+    ///
+    /// The distinction matters on this canvas: a delete badge on a photo has to
+    /// stay small or it covers the photo, but a small *target* on a surface
+    /// where fingers are already imprecise is how you delete the wrong memory.
+    /// The artwork keeps its size and the reachable area grows around it.
+    func minimumHitArea(_ side: CGFloat = 44) -> some View {
+        frame(minWidth: side, minHeight: side)
+            .contentShape(Rectangle())
+    }
+}
+
 /// Every interactive element in this app compresses slightly on touch. It is
 /// the cheapest way to sell physicality, and it applies uniformly.
 struct PressableButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.94 : 1)
-            .animation(.spring(response: 0.24, dampingFraction: 0.6), value: configuration.isPressed)
+        Pressable(isPressed: configuration.isPressed, label: configuration.label)
+    }
+
+    /// A real `View`, not just the contents of `makeBody`.
+    ///
+    /// `@Environment` declared on a `ButtonStyle` is read once and never
+    /// updated — a style is not a view, so nothing re-invokes `makeBody` when
+    /// the value changes. Moving the body into a view is what lets the press
+    /// animation see `motionPolicy` at all, and see it change live.
+    private struct Pressable: View {
+
+        let isPressed: Bool
+        let label: ButtonStyleConfiguration.Label
+
+        @Environment(\.motionPolicy) private var motion
+
+        var body: some View {
+            label
+                .scaleEffect(isPressed ? 0.94 : 1)
+                .animation(motion.animation(.spring(response: 0.24, dampingFraction: 0.6)), value: isPressed)
+        }
     }
 }
 
@@ -115,6 +152,8 @@ struct FilterChip: View {
         Button(action: action) {
             Text(title.uppercased())
                 .textStyle(TypeScale.labelCaps)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .foregroundStyle(isSelected ? Palette.onNeon : Palette.onSurfaceVariant)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 9)

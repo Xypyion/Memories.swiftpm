@@ -11,6 +11,7 @@ struct ItemInspector: View {
     let onDone: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.motionPolicy) private var motion
 
     var body: some View {
         NavigationStack {
@@ -196,7 +197,7 @@ struct ItemInspector: View {
             }
 
             Button("Straighten") {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                withAnimation(motion.animation(.spring(response: 0.35, dampingFraction: 0.7))) {
                     item.rotation = 0
                     item.scale = 1
                 }
