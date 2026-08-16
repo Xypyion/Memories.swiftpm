@@ -126,7 +126,10 @@ struct CanvasItemView: View {
                 .scaleEffect(item.width / 160)
 
         case .decoration(let kind):
-            DecorationView(kind: kind, size: item.width, color: Palette.paper)
+            // Held back from full paper white. At full strength a solid star
+            // beside four photographs competes with them, and these are meant
+            // to fill gaps between memories, not to be one.
+            DecorationView(kind: kind, size: item.width, color: Palette.paper.opacity(0.55))
         }
     }
 

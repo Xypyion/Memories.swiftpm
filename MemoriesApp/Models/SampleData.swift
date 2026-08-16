@@ -99,7 +99,7 @@ enum SampleData {
         )
         let star = CanvasItem(
             kind: .decoration(.star),
-            position: CGPoint(x: 1680, y: 950),
+            position: CGPoint(x: 1770, y: 1140),
             rotation: 12,
             zIndex: 1,
             seed: 6,
@@ -130,22 +130,14 @@ enum SampleData {
         // "belongs together" is supposed to look like when you're done.
         let strayPolaroid = CanvasItem(
             kind: .polaroid(PhotoPayload(imageName: "sahara-jump.jpg", caption: "Maya landed badly", aspect: 1.5)),
-            position: CGPoint(x: 980, y: 1180),
+            position: CGPoint(x: 1560, y: 820),
             rotation: -17,
             zIndex: 7,
             seed: 5514,
             width: 250
         )
-        let sunset = CanvasItem(
-            kind: .photo(PhotoPayload(caption: "Golden hour", aspect: 1.2)),
-            position: CGPoint(x: 1370, y: 1130),
-            rotation: 6,
-            zIndex: 5,
-            seed: 8823,
-            width: 290
-        )
 
-        roadtrip.items = [hero, polaroid, note, vibes, diner, star, ring, strayPolaroid, sunset]
+        roadtrip.items = [hero, polaroid, note, vibes, diner, star, ring, strayPolaroid]
 
         // Stamped after assembly rather than inline, so the item declarations
         // above stay readable as *placement* — which is what they're really
@@ -155,9 +147,11 @@ enum SampleData {
             roadtrip.items[index].createdAt = daysAgo(index / 3, plusHours: Double(index % 3) * 3.5)
         }
 
+        // One rope, not two — the worked example. The user sees what a finished
+        // connection looks like before being asked to make one, and the dune
+        // shot and the jump shot are left out of it as the pair to tie.
         roadtrip.ropes = [
-            RopeConnection(a: hero.id, b: polaroid.id, sag: 0.20),
-            RopeConnection(a: polaroid.id, b: diner.id, sag: 0.16)
+            RopeConnection(a: hero.id, b: polaroid.id, sag: 0.20)
         ]
 
         // MARK: Studio Sessions

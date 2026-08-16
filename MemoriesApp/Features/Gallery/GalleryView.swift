@@ -66,7 +66,7 @@ struct GalleryView: View {
             Spacer(minLength: 24)
 
             if isWide {
-                DecorationView(kind: .sparkle, size: 64, color: Palette.accent)
+                DecorationView(kind: .sparkle, size: 40, color: Palette.accent.opacity(0.7))
                     .rotationEffect(.degrees(12))
                     .frame(width: 150, height: 150)
                     .accessibilityHidden(true)
