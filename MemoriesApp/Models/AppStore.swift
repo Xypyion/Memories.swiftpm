@@ -148,7 +148,7 @@ final class AppStore: ObservableObject {
 
     func createBoard() -> UUID {
         let board = Board(
-            title: "Untitled Board",
+            title: nextUntitledName(),
             caption: "Start dropping things in.",
             badge: "New",
             badgeStyle: .neon,
@@ -158,6 +158,39 @@ final class AppStore: ObservableObject {
         )
         boards.insert(board, at: 0)
         return board.id
+    }
+
+    /// "Untitled Board 1", then 2, 3, and so on.
+    ///
+    /// Every new board used to be called "Untitled Board" flat, so making two
+    /// in a row produced two identically-named tiles in the gallery with no way
+    /// to tell them apart — and, since the gallery is the only place a board is
+    /// opened from, no way to tell which one you were about to open.
+    ///
+    /// The number is the lowest one not currently in use rather than a running
+    /// count, so deleting board 2 and making another gives you 2 again instead
+    /// of climbing forever. Renamed titles are ignored, and a bare "Untitled
+    /// Board" from an older save does not claim a number.
+    private func nextUntitledName() -> String {
+        let base = "Untitled Board"
+        var taken: Set<Int> = []
+
+        for existing in boards {
+            if existing.title.hasPrefix(base) == false {
+                continue
+            }
+            let suffix = String(existing.title.dropFirst(base.count))
+            let trimmed = suffix.trimmingCharacters(in: .whitespaces)
+            if let value = Int(trimmed) {
+                taken.insert(value)
+            }
+        }
+
+        var number = 1
+        while taken.contains(number) {
+            number += 1
+        }
+        return "\(base) \(number)"
     }
 
     func deleteBoard(id: UUID) {
